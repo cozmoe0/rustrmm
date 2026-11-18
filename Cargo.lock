@@ -4168,7 +4168,7 @@ name = "rustrmm-proto"
 version = "0.1.0"
 dependencies = [
  "base64 0.23.1",
- "curve25519-dalek 4.1.3",
+ "curve25519-dalek 5.0.0",
  "futures",
  "rmp-serde",
  "rustrmm-crypto",
