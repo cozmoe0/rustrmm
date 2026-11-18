@@ -1,0 +1,12 @@
+# Keep LF line endings in every checkout, including Windows with core.autocrlf=true.
+# Shell scripts run inside Linux containers, and SQL migrations and built-in scripts are embedded
+# at compile time (migration checksums must not change between machines).
+* text=auto eol=lf
+
+# Binary assets
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff2 binary
+*.msi binary
+*.exe binary
