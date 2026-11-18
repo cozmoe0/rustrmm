@@ -21,7 +21,7 @@ zeroize.workspace = true
 # Noise IK end-to-end channel: pure-Rust resolver (ChaCha20-Poly1305, BLAKE2s, X25519), no OpenSSL.
 snow = { version = "0.10", default-features = false, features = ["std", "use-chacha20poly1305", "use-blake2", "use-curve25519", "use-getrandom"] }
 # X25519 public key from a stored secret (the same curve25519-dalek release snow uses).
-curve25519-dalek = { version = "4.1.3", default-features = false }
+curve25519-dalek = { version = "5.0.0", default-features = false }
 # Optional WebSocket adapter for the agent, the simulator and tests.
 tokio-tungstenite = { workspace = true, optional = true }
 
