@@ -1,0 +1,237 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800" role="img" aria-labelledby="title desc">
+  <title id="title">RustRMM architecture</title>
+  <desc id="desc">Administrators, an identity provider, integrations and mail connect to the rustrmm-server console listener on port 8443. Agents on Windows, macOS and Linux connect to the agent gateway on port 8444 over TLS 1.3 with a pinned CA and a Noise IK channel, receive Ed25519-signed commands and send inventory, metrics and events. The server keeps SQLite, wrapped keys and an internal CA, and writes encrypted backups to local disk and S3.</desc>
+  <style>
+    .sans { font-family: Inter, "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif; }
+    .mono { font-family: "JetBrains Mono", "Cascadia Mono", SFMono-Regular, Consolas, "Liberation Mono", monospace; }
+    .h { font-size: 15px; font-weight: 600; fill: #F3F3F1; }
+    .b { font-size: 12.5px; fill: #A3A9B1; }
+    .eyebrow { font-size: 11px; letter-spacing: 1.5px; fill: #8D949D; }
+    .tile { fill: #171C23; stroke: #FFFFFF; stroke-opacity: 0.08; }
+    .box { fill: #12161C; stroke: #FFFFFF; stroke-opacity: 0.10; }
+    .tt { font-size: 12.5px; font-weight: 550; fill: #DADDE1; }
+    .lbl { font-size: 10.5px; fill: #8D949D; }
+    @media (prefers-reduced-motion: reduce) { .pkt { display: none; } }
+  </style>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#11151A"/>
+      <stop offset="1" stop-color="#090B0E"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.35" r="0.5">
+      <stop offset="0" stop-color="#E07444" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#E07444" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#FFFFFF" stroke-opacity="0.03"/>
+    </pattern>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 1L9 5L0 9z" fill="#7E858E"/>
+    </marker>
+    <marker id="arrowPatina" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 1L9 5L0 9z" fill="#3FC1B0"/>
+    </marker>
+    <marker id="arrowCopper" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 1L9 5L0 9z" fill="#E07444"/>
+    </marker>
+    <clipPath id="card"><rect width="1280" height="800" rx="24"/></clipPath>
+  </defs>
+
+  <g clip-path="url(#card)">
+    <rect width="1280" height="800" fill="url(#bg)"/>
+    <rect width="1280" height="800" fill="url(#grid)"/>
+    <rect width="1280" height="800" fill="url(#glow)"/>
+  </g>
+  <rect x="0.5" y="0.5" width="1279" height="799" rx="23.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.08"/>
+
+  <text x="48" y="54" class="mono eyebrow">ARCHITECTURE</text>
+  <text x="48" y="88" class="sans" font-size="24" font-weight="650" letter-spacing="-0.4" fill="#F3F3F1">One server. Two listeners. Agents everywhere.</text>
+
+  <!-- ============ Left column: people and integrations ============ -->
+  <g class="sans">
+    <rect x="48" y="130" width="250" height="122" rx="14" class="box"/>
+    <text x="68" y="160" class="h">Admins &amp; technicians</text>
+    <text x="68" y="184" class="b">Web console · MFA · passkeys</text>
+    <text x="68" y="203" class="b">Step-up for sensitive actions</text>
+    <rect x="68" y="216" width="112" height="22" rx="11" fill="#E07444" fill-opacity="0.12" stroke="#E07444" stroke-opacity="0.5"/>
+    <text x="124" y="231" text-anchor="middle" font-size="11.5" font-weight="550" fill="#F0A47F">LAN / VPN only</text>
+
+    <rect x="48" y="272" width="250" height="100" rx="14" class="box"/>
+    <text x="68" y="302" class="h">Identity provider</text>
+    <text x="68" y="326" class="b">Entra ID · Google · Okta</text>
+    <text x="68" y="345" class="b">Keycloak (OIDC + PKCE)</text>
+
+    <rect x="48" y="392" width="250" height="118" rx="14" class="box"/>
+    <text x="68" y="422" class="h">Integrations</text>
+    <text x="68" y="446" class="b">REST API · OpenAPI 3.1</text>
+    <text x="68" y="465" class="b">Scoped API tokens</text>
+    <text x="68" y="484" class="b">Signed webhooks (HMAC)</text>
+
+    <rect x="48" y="530" width="250" height="100" rx="14" class="box"/>
+    <text x="68" y="560" class="h">Mail</text>
+    <text x="68" y="584" class="b">SMTP alerts and reports</text>
+    <text x="68" y="603" class="b">IMAP email-to-ticket</text>
+
+    <rect x="48" y="650" width="250" height="100" rx="14" class="box" stroke-dasharray="4 4"/>
+    <text x="68" y="680" class="h">Reverse proxy <tspan class="b" font-weight="400">(optional)</tspan></text>
+    <text x="68" y="704" class="b">Terminates TLS; Noise keeps</text>
+    <text x="68" y="723" class="b">agent traffic private from it</text>
+  </g>
+
+  <!-- left connectors -->
+  <g fill="none" stroke="#7E858E" stroke-width="1.4">
+    <path d="M298 191 H336 V226 H384" marker-end="url(#arrow)"/>
+    <path d="M298 322 H360" marker-end="url(#arrow)"/>
+    <path d="M298 451 H360" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+    <path d="M298 580 H360" marker-start="url(#arrow)"/>
+  </g>
+  <g class="mono lbl">
+    <text x="304" y="184">HTTPS</text>
+    <text x="306" y="315">OIDC</text>
+    <text x="304" y="444">REST</text>
+    <text x="306" y="573">SMTP</text>
+  </g>
+
+  <!-- ============ Center: the server ============ -->
+  <rect x="360" y="130" width="500" height="620" rx="18" fill="#0F1318" stroke="#E07444" stroke-opacity="0.45" stroke-width="1.5"/>
+  <g transform="translate(384 150)">
+    <rect width="34" height="34" rx="9" fill="#14171C" stroke="#FFFFFF" stroke-opacity="0.12"/>
+    <g transform="translate(1 1) scale(1)">
+      <path d="M9 22V10h7.2c2.9 0 4.8 1.7 4.8 4.2 0 1.9-1.1 3.3-2.9 3.9L21.6 22h-3.4l-3.1-3.6H12.1V22zm3.1-6.3h3.9c1.2 0 1.9-.6 1.9-1.6s-.7-1.6-1.9-1.6h-3.9z" fill="#E07444"/>
+      <circle cx="24" cy="9" r="2.5" fill="#3FC1B0"/>
+    </g>
+  </g>
+  <text x="430" y="166" class="mono" font-size="17" font-weight="600" fill="#F3F3F1">rustrmm-server</text>
+  <text x="430" y="186" class="sans b">One binary · web console embedded · Docker or native</text>
+
+  <!-- listeners -->
+  <g class="sans">
+    <rect x="384" y="206" width="218" height="40" rx="10" fill="#E07444" fill-opacity="0.10" stroke="#E07444" stroke-opacity="0.55"/>
+    <text x="400" y="231" class="tt" fill="#F3F3F1">Console &amp; API</text>
+    <text x="586" y="231" text-anchor="end" class="mono" font-size="13" font-weight="600" fill="#F0A47F">:8443</text>
+    <rect x="618" y="206" width="218" height="40" rx="10" fill="#3FC1B0" fill-opacity="0.10" stroke="#3FC1B0" stroke-opacity="0.55"/>
+    <text x="634" y="231" class="tt" fill="#F3F3F1">Agent gateway</text>
+    <text x="820" y="231" text-anchor="end" class="mono" font-size="13" font-weight="600" fill="#7FD9CC">:8444</text>
+  </g>
+
+  <!-- modules -->
+  <text x="384" y="276" class="mono eyebrow">MODULES</text>
+  <g class="sans" text-anchor="middle">
+    <g transform="translate(384 288)"><rect width="141" height="44" rx="9" class="tile"/><text x="70.5" y="27" class="tt">Auth · MFA · RBAC</text></g>
+    <g transform="translate(539.5 288)"><rect width="141" height="44" rx="9" class="tile"/><text x="70.5" y="27" class="tt">Hash-chained audit</text></g>
+    <g transform="translate(695 288)"><rect width="141" height="44" rx="9" class="tile"/><text x="70.5" y="27" class="tt">Scripts &amp; jobs</text></g>
+
+    <g transform="translate(384 342)"><rect width="141" height="44" rx="9" class="tile"/><text x="70.5" y="27" class="tt">Policies &amp; groups</text></g>
+    <g transform="translate(539.5 342)"><rect width="141" height="44" rx="9" class="tile"/><text x="70.5" y="27" class="tt">Monitoring &amp; alerts</text></g>
+    <g transform="translate(695 342)"><rect width="141" height="44" rx="9" class="tile"/><text x="70.5" y="27" class="tt">Patching &amp; software</text></g>
+
+    <g transform="translate(384 396)"><rect width="141" height="44" rx="9" class="tile"/><text x="70.5" y="27" class="tt">Remote tools relay</text></g>
+    <g transform="translate(539.5 396)"><rect width="141" height="44" rx="9" class="tile"/><text x="70.5" y="27" class="tt">Tickets &amp; SLAs</text></g>
+    <g transform="translate(695 396)"><rect width="141" height="44" rx="9" class="tile"/><text x="70.5" y="27" class="tt">Reports &amp; dashboards</text></g>
+
+    <g transform="translate(384 450)"><rect width="141" height="44" rx="9" class="tile"/><text x="70.5" y="27" class="tt">BitLocker / LAPS</text></g>
+    <g transform="translate(539.5 450)"><rect width="141" height="44" rx="9" class="tile"/><text x="70.5" y="27" class="tt">Discovery &amp; SNMP</text></g>
+    <g transform="translate(695 450)"><rect width="141" height="44" rx="9" class="tile"/><text x="70.5" y="27" class="tt">Releases &amp; rollouts</text></g>
+  </g>
+
+  <!-- data -->
+  <text x="384" y="530" class="mono eyebrow">DATA</text>
+  <g class="sans">
+    <g transform="translate(384 542)">
+      <rect width="141" height="70" rx="10" class="tile"/>
+      <path d="M16 20c0-3 7-5 13-5s13 2 13 5v16c0 3-7 5-13 5s-13-2-13-5z M16 20c0 3 7 5 13 5s13-2 13-5 M16 28c0 3 7 5 13 5s13-2 13-5" transform="translate(-2 -2) scale(0.62)" fill="none" stroke="#7FD9CC" stroke-width="2.2"/>
+      <text x="40" y="27" class="tt">SQLite (WAL)</text>
+      <text x="16" y="52" class="b" font-size="11.5">UUIDv7 keys · JSON1</text>
+    </g>
+    <g transform="translate(539.5 542)">
+      <rect width="141" height="70" rx="10" class="tile"/>
+      <g transform="translate(16 14)" fill="none" stroke="#F0A47F" stroke-width="1.5" stroke-linecap="round">
+        <circle cx="6" cy="8" r="5"/><path d="M11 8h9M17 8v4M20 8v3"/>
+      </g>
+      <text x="44" y="27" class="tt">Key vault</text>
+      <text x="16" y="52" class="b" font-size="11.5">Master-key wrapped</text>
+    </g>
+    <g transform="translate(695 542)">
+      <rect width="141" height="70" rx="10" class="tile"/>
+      <g transform="translate(16 13)" fill="none" stroke="#7FD9CC" stroke-width="1.5" stroke-linejoin="round">
+        <path d="M9 1l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V4z"/><path d="M5.5 10l2.5 2.5 4.5-5" stroke-linecap="round"/>
+      </g>
+      <text x="44" y="27" class="tt">Internal CA</text>
+      <text x="16" y="52" class="b" font-size="11.5">Auto-renewing TLS</text>
+    </g>
+  </g>
+
+  <!-- workers -->
+  <text x="384" y="646" class="mono eyebrow">BACKGROUND WORKERS</text>
+  <g class="sans">
+    <rect x="384" y="658" width="452" height="68" rx="10" class="tile"/>
+    <text x="404" y="686" class="b" fill="#C2C7CD">Scheduler · check engine · SLA clock · backup runner</text>
+    <text x="404" y="707" class="b" fill="#C2C7CD">Webhook delivery · report schedules · staged rollouts</text>
+  </g>
+
+  <!-- ============ Right column: endpoints ============ -->
+  <g class="sans">
+    <rect x="960" y="130" width="272" height="330" rx="14" class="box" stroke="#3FC1B0" stroke-opacity="0.45"/>
+    <text x="980" y="162" class="mono" font-size="15" font-weight="600" fill="#F3F3F1">rustrmm-agent</text>
+    <text x="980" y="182" class="b">One Rust binary per platform</text>
+
+    <g transform="translate(980 198)">
+      <rect width="232" height="52" rx="10" class="tile"/>
+      <g transform="translate(14 15)" fill="#6CB4F5"><rect width="9.5" height="9.5"/><rect x="11.5" width="9.5" height="9.5"/><rect y="11.5" width="9.5" height="9.5"/><rect x="11.5" y="11.5" width="9.5" height="9.5"/></g>
+      <text x="48" y="23" class="tt" fill="#F3F3F1">Windows</text>
+      <text x="48" y="40" class="b" font-size="11.5">Service · MSI · Group Policy</text>
+    </g>
+    <g transform="translate(980 258)">
+      <rect width="232" height="52" rx="10" class="tile"/>
+      <g transform="translate(13 14)" fill="none" stroke="#D5D8DC" stroke-width="1.6" stroke-linecap="round"><rect x="2" y="2" width="20" height="14" rx="2"/><path d="M0 21h24"/></g>
+      <text x="48" y="23" class="tt" fill="#F3F3F1">macOS</text>
+      <text x="48" y="40" class="b" font-size="11.5">launchd · universal binary</text>
+    </g>
+    <g transform="translate(980 318)">
+      <rect width="232" height="52" rx="10" class="tile"/>
+      <g transform="translate(13 14)" fill="none" stroke="#F0C674" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="0" y="0" width="24" height="22" rx="3"/><path d="M5 7l4 4-4 4M12 15h7"/></g>
+      <text x="48" y="23" class="tt" fill="#F3F3F1">Linux</text>
+      <text x="48" y="40" class="b" font-size="11.5">systemd / OpenRC · static musl</text>
+    </g>
+    <text x="980" y="398" class="b">Session helper: DXGI / X11 desktop</text>
+    <text x="980" y="418" class="b">Inventory, metrics, checks, scripts</text>
+    <text x="980" y="438" class="b">Local policy can switch features off</text>
+
+    <rect x="960" y="480" width="272" height="124" rx="14" class="box"/>
+    <text x="980" y="510" class="h">Site probe</text>
+    <text x="980" y="534" class="b">Any agent can scan its own LAN</text>
+    <text x="980" y="553" class="b">ICMP · ARP · mDNS · NetBIOS</text>
+    <text x="980" y="572" class="b">SNMP v1/v2c/v3 polling and traps</text>
+    <text x="980" y="591" class="b" fill="#7E858E">Switches, printers, UPS, firewalls</text>
+
+    <rect x="960" y="624" width="272" height="126" rx="14" class="box"/>
+    <text x="980" y="654" class="h">Encrypted backups</text>
+    <text x="980" y="678" class="b">VACUUM INTO → zstd → age</text>
+    <text x="980" y="697" class="b">Local disk + S3 (Object Lock)</text>
+    <text x="980" y="716" class="b">GFS retention · pre-migration</text>
+    <text x="980" y="735" class="b" fill="#7E858E">Server holds only the public key</text>
+  </g>
+
+  <!-- right connectors -->
+  <g fill="none" stroke-width="1.6">
+    <path id="cTls" d="M836 226 H960" stroke="#3FC1B0" stroke-width="2.4" marker-end="url(#arrowPatina)" marker-start="url(#arrowPatina)"/>
+    <path id="cCmd" d="M860 300 H960" stroke="#E07444" marker-end="url(#arrowCopper)"/>
+    <path id="cInv" d="M960 372 H860" stroke="#7E858E" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+    <path d="M1096 460 V480" stroke="#7E858E" stroke-dasharray="3 3"/>
+    <path d="M860 688 H960" stroke="#7E858E" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+  </g>
+  <g class="pkt">
+    <circle r="3" fill="#F0A47F"><animateMotion dur="2.4s" repeatCount="indefinite"><mpath href="#cCmd"/></animateMotion></circle>
+    <circle r="3" fill="#AEB4BB"><animateMotion dur="3s" begin="0.7s" repeatCount="indefinite"><mpath href="#cInv"/></animateMotion></circle>
+  </g>
+  <g class="mono lbl" text-anchor="middle">
+    <text x="910" y="215">TLS 1.3</text>
+    <text x="910" y="248" fill="#7FD9CC">+ Noise IK</text>
+    <text x="910" y="290" fill="#F0A47F">Ed25519</text>
+    <text x="910" y="318">commands</text>
+    <text x="910" y="362">inventory</text>
+    <text x="910" y="390">&amp; metrics</text>
+    <text x="910" y="678">nightly +</text>
+    <text x="910" y="706">pre-migration</text>
+  </g>
+</svg>

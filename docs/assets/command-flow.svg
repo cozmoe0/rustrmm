@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="340" viewBox="0 0 1280 340" role="img" aria-labelledby="title desc">
+  <title id="title">Life of a remote command</title>
+  <desc id="desc">A request passes step-up MFA, an RBAC scope check and the mass-action guard, is written to the hash-chained audit log, is signed as an Ed25519 envelope bound to the device, connection, sequence and expiry, and is verified by the agent against its replay window and local policy before it runs.</desc>
+  <style>
+    .sans { font-family: Inter, "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif; }
+    .mono { font-family: "JetBrains Mono", "Cascadia Mono", SFMono-Regular, Consolas, "Liberation Mono", monospace; }
+    .t { font-size: 15px; font-weight: 600; fill: #F3F3F1; }
+    .b { font-size: 12.5px; fill: #A3A9B1; }
+    .n { font-size: 12px; font-weight: 700; }
+    .eyebrow { font-size: 11px; letter-spacing: 1.5px; fill: #8D949D; }
+    .card { fill: #12161C; stroke: #FFFFFF; stroke-opacity: 0.10; }
+  </style>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#11151A"/>
+      <stop offset="1" stop-color="#090B0E"/>
+    </linearGradient>
+    <linearGradient id="rail" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#E07444" stop-opacity="0.15"/>
+      <stop offset="0.8" stop-color="#E07444" stop-opacity="0.7"/>
+      <stop offset="1" stop-color="#3FC1B0" stop-opacity="0.9"/>
+    </linearGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#FFFFFF" stroke-opacity="0.03"/>
+    </pattern>
+    <clipPath id="clip"><rect width="1280" height="340" rx="24"/></clipPath>
+  </defs>
+
+  <g clip-path="url(#clip)">
+    <rect width="1280" height="340" fill="url(#bg)"/>
+    <rect width="1280" height="340" fill="url(#grid)"/>
+  </g>
+  <rect x="0.5" y="0.5" width="1279" height="339" rx="23.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.08"/>
+
+  <text x="48" y="54" class="mono eyebrow">LIFE OF A REMOTE COMMAND</text>
+  <text x="48" y="86" class="sans" font-size="22" font-weight="650" letter-spacing="-0.3" fill="#F3F3F1">Checked, recorded and signed before it reaches an endpoint.</text>
+
+  <!-- progress rail -->
+  <rect x="48" y="112" width="1184" height="3" rx="1.5" fill="url(#rail)"/>
+
+  <g class="sans">
+    <!-- 1 -->
+    <g transform="translate(48 132)">
+      <rect width="184" height="150" rx="14" class="card"/>
+      <circle cx="28" cy="30" r="13" fill="#E07444" fill-opacity="0.14" stroke="#E07444" stroke-opacity="0.6"/>
+      <text x="28" y="34.5" text-anchor="middle" class="n" fill="#F0A47F">1</text>
+      <text x="50" y="35" class="t">Request</text>
+      <text x="16" y="74" class="b">A technician runs a</text>
+      <text x="16" y="93" class="b">script, opens a shell</text>
+      <text x="16" y="112" class="b">or starts a desktop.</text>
+    </g>
+    <!-- 2 -->
+    <g transform="translate(247.2 132)">
+      <rect width="184" height="150" rx="14" class="card"/>
+      <circle cx="28" cy="30" r="13" fill="#E07444" fill-opacity="0.14" stroke="#E07444" stroke-opacity="0.6"/>
+      <text x="28" y="34.5" text-anchor="middle" class="n" fill="#F0A47F">2</text>
+      <text x="50" y="35" class="t">Step-up MFA</text>
+      <text x="16" y="74" class="b">Sensitive actions ask</text>
+      <text x="16" y="93" class="b">for a fresh TOTP or</text>
+      <text x="16" y="112" class="b">passkey check.</text>
+    </g>
+    <!-- 3 -->
+    <g transform="translate(446.4 132)">
+      <rect width="184" height="150" rx="14" class="card"/>
+      <circle cx="28" cy="30" r="13" fill="#E07444" fill-opacity="0.14" stroke="#E07444" stroke-opacity="0.6"/>
+      <text x="28" y="34.5" text-anchor="middle" class="n" fill="#F0A47F">3</text>
+      <text x="50" y="35" class="t">Scope check</text>
+      <text x="16" y="74" class="b">RBAC limits each call</text>
+      <text x="16" y="93" class="b">to the clients and</text>
+      <text x="16" y="112" class="b">sites you are given.</text>
+    </g>
+    <!-- 4 -->
+    <g transform="translate(645.6 132)">
+      <rect width="184" height="150" rx="14" class="card"/>
+      <circle cx="28" cy="30" r="13" fill="#E07444" fill-opacity="0.14" stroke="#E07444" stroke-opacity="0.6"/>
+      <text x="28" y="34.5" text-anchor="middle" class="n" fill="#F0A47F">4</text>
+      <text x="50" y="35" class="t">Guardrails</text>
+      <text x="16" y="74" class="b">Fleet-wide changes</text>
+      <text x="16" y="93" class="b">hit the mass-action</text>
+      <text x="16" y="112" class="b">guard or four-eyes.</text>
+    </g>
+    <!-- 5 -->
+    <g transform="translate(844.8 132)">
+      <rect width="184" height="150" rx="14" class="card" stroke="#E07444" stroke-opacity="0.55"/>
+      <circle cx="28" cy="30" r="13" fill="#E07444" fill-opacity="0.14" stroke="#E07444" stroke-opacity="0.6"/>
+      <text x="28" y="34.5" text-anchor="middle" class="n" fill="#F0A47F">5</text>
+      <text x="50" y="35" class="t">Sign &amp; audit</text>
+      <text x="16" y="74" class="b">Ed25519 envelope tied</text>
+      <text x="16" y="93" class="b">to device, connection,</text>
+      <text x="16" y="112" class="b">sequence and expiry.</text>
+      <text x="16" y="134" class="mono" font-size="10.5" fill="#F0A47F">→ hash-chained log</text>
+    </g>
+    <!-- 6 -->
+    <g transform="translate(1044 132)">
+      <rect width="188" height="150" rx="14" class="card" stroke="#3FC1B0" stroke-opacity="0.6"/>
+      <circle cx="28" cy="30" r="13" fill="#3FC1B0" fill-opacity="0.14" stroke="#3FC1B0" stroke-opacity="0.7"/>
+      <text x="28" y="34.5" text-anchor="middle" class="n" fill="#7FD9CC">6</text>
+      <text x="50" y="35" class="t">Verify &amp; run</text>
+      <text x="16" y="74" class="b">The agent checks the</text>
+      <text x="16" y="93" class="b">signature, replay</text>
+      <text x="16" y="112" class="b">window, local policy.</text>
+      <text x="16" y="134" class="mono" font-size="10.5" fill="#7FD9CC">→ result audited</text>
+    </g>
+  </g>
+
+  <!-- chevrons between cards -->
+  <g fill="#0C0F13" stroke="#FFFFFF" stroke-opacity="0.16">
+    <circle cx="239.6" cy="207" r="10"/>
+    <circle cx="438.8" cy="207" r="10"/>
+    <circle cx="638" cy="207" r="10"/>
+    <circle cx="837.2" cy="207" r="10"/>
+    <circle cx="1036.4" cy="207" r="10" stroke="#3FC1B0" stroke-opacity="0.6"/>
+  </g>
+  <g fill="none" stroke="#C9CED5" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M237.6 203l4 4-4 4"/>
+    <path d="M436.8 203l4 4-4 4"/>
+    <path d="M636 203l4 4-4 4"/>
+    <path d="M835.2 203l4 4-4 4"/>
+    <path d="M1034.4 203l4 4-4 4" stroke="#7FD9CC"/>
+  </g>
+
+  <!-- zones -->
+  <g class="mono" font-size="10.5" letter-spacing="1.2">
+    <path d="M48 300 v8 h980.8 v-8" fill="none" stroke="#E07444" stroke-opacity="0.4"/>
+    <text x="538" y="326" text-anchor="middle" fill="#B98A73">SERVER · CONSOLE LISTENER :8443</text>
+    <path d="M1044 300 v8 h188 v-8" fill="none" stroke="#3FC1B0" stroke-opacity="0.5"/>
+    <text x="1138" y="326" text-anchor="middle" fill="#7FB9B0">ENDPOINT · TLS + NOISE</text>
+  </g>
+</svg>
