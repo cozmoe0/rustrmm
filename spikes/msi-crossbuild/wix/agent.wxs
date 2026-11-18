@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  RustRMM MSI spike: WiX v3 schema, compiled with wixl (msitools) on Linux.
+
+  ProductCode is FIXED on purpose: the agent self-updates by swapping its own binary, so
+  this MSI is only used for first install (GPO / RMM push / by hand) and for uninstall.
+  Keep Product/@Id and Product/@UpgradeCode in sync with agent/src/main.rs.
+
+  Build: scripts/build-msi.sh, which runs
+    wixl -a x64 -D Version=0.1.0 -D AgentExe=/path/to/rustrmm-spike-agent.exe \
+         -o RustRMMSpikeAgent.msi agent.wxs
+  and then patches two things wixl 0.106 cannot express (see FINDINGS.md) with msibuild:
+    - DEPLOY_KEY appended to SecureCustomProperties (WiX: Property/@Secure, ignored by wixl)
+    - ServiceInstall.ErrorControl |= msidbServiceInstallErrorControlVital (WiX: @Vital, ignored)
+
+  wixl quirks that shaped this file:
+    - Every $(var.X) must be passed with -D; <?ifdef?>/<?ifndef?> break the preprocessor.
+    - Property/@Hidden, Property/@Secure, Package/@Platform, Package/@InstallPrivileges and
+      ServiceInstall/@Vital are not honoured, so they are not used here.
+    - No Permission/PermissionEx, ServiceConfig, ServiceConfigFailureActions, SetProperty,
+      CDATA conditions or extensions (util:*).
+-->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="{7C26286F-1047-4CA2-B343-2797FAD7228C}"
+           UpgradeCode="{5840E1F2-DD29-4DB7-BF38-2B9425C17909}"
+           Name="RustRMM Spike Agent"
+           Version="$(var.Version)"
+           Manufacturer="RustRMM"
+           Language="1033"
+           Codepage="1252">
+
+    <!-- Per-machine (wixl emits ALLUSERS=1); x64 comes from `wixl -a x64` (Template x64;1033). -->
+    <Package InstallerVersion="500"
+             Compressed="yes"
+             InstallScope="perMachine"
+             Description="RustRMM Spike Agent"
+             Comments="Throwaway MSI spike built with wixl" />
+
+    <Media Id="1" Cabinet="agent.cab" EmbedCab="yes" />
+
+    <!-- Safety net for a future ProductCode change; never fires while the code stays fixed. -->
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+
+    <!-- Add/Remove Programs: uninstall only. -->
+    <Property Id="ARPNOREPAIR" Value="yes" />
+    <Property Id="ARPNOMODIFY" Value="yes" />
+
+    <!--
+      DEPLOY_KEY is a public property passed on the command line (msiexec /i ... DEPLOY_KEY=...).
+      WiX would write <Property Id="DEPLOY_KEY" Hidden="yes" Secure="yes"/>; wixl ignores both
+      attributes, so hide it explicitly and let build-msi.sh add it to SecureCustomProperties.
+    -->
+    <Property Id="MsiHiddenProperties" Value="DEPLOY_KEY" />
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLDIR" Name="RustRMM Spike">
+
+          <Component Id="AgentService" Guid="{AC90B185-387F-4BD7-AE81-823C1A4A5A71}" Win64="yes">
+            <File Id="AgentExe" Name="rustrmm-spike-agent.exe" Source="$(var.AgentExe)" KeyPath="yes" />
+            <ServiceInstall Id="AgentServiceInstall"
+                            Name="RustRMMSpikeAgent"
+                            DisplayName="RustRMM Spike Agent"
+                            Description="Throwaway MSI spike service"
+                            Type="ownProcess"
+                            Start="auto"
+                            ErrorControl="normal"
+                            Account="LocalSystem" />
+            <ServiceControl Id="AgentServiceControl"
+                            Name="RustRMMSpikeAgent"
+                            Start="install"
+                            Stop="both"
+                            Remove="uninstall"
+                            Wait="yes" />
+            <!-- Diagnostic: full path of the .msi being installed, available before StartServices. -->
+            <RegistryValue Id="RegSourcePackage" Root="HKLM" Key="SOFTWARE\RustRMMSpike"
+                           Name="SourcePackage" Type="string" Value="[OriginalDatabase]" />
+          </Component>
+
+          <!-- Only installed when DEPLOY_KEY was passed; the agent deletes the value after use. -->
+          <Component Id="DeployKeyValue" Guid="{D5021A14-301D-4FA3-ACC0-35D3461544F3}" Win64="yes">
+            <Condition>DEPLOY_KEY</Condition>
+            <RegistryValue Id="RegDeployKey" Root="HKLM" Key="SOFTWARE\RustRMMSpike"
+                           Name="DeployKey" Type="string" Value="[DEPLOY_KEY]" KeyPath="yes" />
+          </Component>
+
+        </Directory>
+      </Directory>
+    </Directory>
+
+    <Feature Id="Main" Level="1" Title="RustRMM Spike Agent">
+      <ComponentRef Id="AgentService" />
+      <ComponentRef Id="DeployKeyValue" />
+    </Feature>
+  </Product>
+</Wix>

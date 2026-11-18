@@ -1,0 +1,12 @@
+[package]
+name = "hello-cross"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "Throwaway spike: cargo-zigbuild cross-compile check"
+
+# Standalone crate: keep it out of the repo-root workspace.
+[workspace]
+
+[profile.release]
+strip = true

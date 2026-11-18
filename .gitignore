@@ -1,0 +1,33 @@
+# Rust
+/target/
+**/target/
+
+# Node / web
+node_modules/
+/web/dist/
+/web/coverage/
+/web/playwright-report/
+/web/test-results/
+/web/.tanstack/
+
+# Local runtime data and secrets — never commit these
+/data/
+/backups/
+/secrets/
+/dist/
+*.db
+*.db-shm
+*.db-wal
+signing.toml
+.env
+
+# Editors / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Local development state (device identities, simulator keys)
+agent-dev/
+sim-state/

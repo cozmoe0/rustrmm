@@ -1,0 +1,71 @@
+# cargo-fuzz targets (libFuzzer). Needs a nightly toolchain and cargo-fuzz:
+#
+#   cargo install cargo-fuzz
+#   cargo +nightly fuzz run frame_decode            # from the repository root
+#   cargo +nightly fuzz run rule_engine -- -max_total_time=300
+#
+# The target bodies live in crates/fuzzing (a normal workspace crate), whose stable tests push a
+# few thousand random and mutated inputs through every target on each CI run. This crate is not
+# part of the workspace build (`exclude = ["fuzz"]` in the root Cargo.toml).
+
+[package]
+name = "rustrmm-fuzz"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+rustrmm-fuzzing = { path = "../crates/fuzzing" }
+
+# A workspace of its own, so `cargo fuzz` never builds the main workspace's members.
+[workspace]
+members = ["."]
+
+[profile.release]
+debug = 1
+
+[[bin]]
+name = "frame_decode"
+path = "fuzz_targets/frame_decode.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "command_payload"
+path = "fuzz_targets/command_payload.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "deploy_key"
+path = "fuzz_targets/deploy_key.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "tunnel_control"
+path = "fuzz_targets/tunnel_control.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "desktop_message"
+path = "fuzz_targets/desktop_message.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "rule_engine"
+path = "fuzz_targets/rule_engine.rs"
+test = false
+doc = false
+bench = false

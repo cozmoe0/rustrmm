@@ -1,0 +1,59 @@
+# RustRMM — single-container deployment for Linux hosts or Windows (Docker Desktop / WSL2).
+#
+#   cd deploy
+#   cp .env.example .env          # set RUSTRMM_CONSOLE_URL / RUSTRMM_AGENT_URL
+#   docker compose up -d --build  # or `docker compose pull && docker compose up -d` for a published image
+#   docker compose logs rustrmm   # shows the one-time setup token on first start
+#
+# Then open the console URL and finish the setup wizard. Store the recovery kit it gives you.
+
+name: rustrmm
+
+services:
+  rustrmm:
+    image: ${RUSTRMM_IMAGE:-rustrmm/server:local}
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: rustrmm
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "${RUSTRMM_CONSOLE_PORT:-443}:8443"   # web console + API — keep this LAN/VPN only
+      - "${RUSTRMM_AGENT_PORT:-8444}:8444"    # agent gateway — the only port to expose for remote workers
+      # - "80:8080"                           # optional HTTP→HTTPS redirect (set RUSTRMM_HTTP_BIND=0.0.0.0:8080)
+    volumes:
+      # Named volume: SQLite needs real file locking, which Windows bind mounts do not provide.
+      - rustrmm-data:/data
+      # Backups land on the host for easy copying; also configure an S3 target in the console.
+      - ./backups:/backups
+    # Hardened mode: keep the master key outside the data volume (see README).
+    # environment:
+    #   RUSTRMM_MASTER_KEY_FILE: /run/secrets/master_key
+    # secrets:
+    #   - master_key
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "/app/rustrmm-server", "healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+volumes:
+  rustrmm-data:
+
+# secrets:
+#   master_key:
+#     file: ./secrets/master.key

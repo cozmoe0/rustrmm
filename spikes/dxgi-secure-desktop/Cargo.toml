@@ -1,0 +1,56 @@
+# Phase-0 throwaway spike: prove that a LocalSystem service can capture the
+# active console session's screen, including the UAC secure desktop and the
+# Winlogon / lock screen, from a helper process it launches into that session.
+#
+# Not production code. Nothing here is imported by the main workspace.
+
+[package]
+name = "dxgi-secure-desktop-spike"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[[bin]]
+name = "dxgi-spike"
+path = "src/main.rs"
+
+# Empty workspace table: this crate is standalone and must never be picked up
+# by the root workspace (which also lists `spikes` in `exclude`).
+[workspace]
+
+[dependencies]
+anyhow = "1"
+jpeg-encoder = "0.6"
+windows-service = "0.8"
+
+[dependencies.windows]
+version = "0.62"
+features = [
+    "Win32_Foundation",
+    "Win32_Graphics_Direct3D",
+    "Win32_Graphics_Direct3D11",
+    "Win32_Graphics_Dwm",
+    "Win32_Graphics_Dxgi",
+    "Win32_Graphics_Dxgi_Common",
+    "Win32_Graphics_Gdi",
+    "Win32_Security",
+    "Win32_Security_Authorization",
+    "Win32_System_Console",
+    "Win32_System_Environment",
+    "Win32_System_LibraryLoader",
+    "Win32_System_RemoteDesktop",
+    "Win32_System_StationsAndDesktops",
+    "Win32_System_SystemInformation",
+    "Win32_System_Threading",
+    "Win32_UI_Accessibility",
+    "Win32_UI_HiDpi",
+    "Win32_UI_WindowsAndMessaging",
+]
+
+# JPEG encoding of full-screen frames is unusably slow unoptimised; optimise
+# dependencies even in debug builds so `cargo build` output is representative.
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.dev]
+opt-level = 1

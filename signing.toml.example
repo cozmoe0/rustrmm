@@ -1,0 +1,62 @@
+# Code signing for `cargo xtask dist` / `cargo xtask sign` (step-by-step guide: docs/signing.md).
+#
+# Copy to `signing.toml` (git-ignored) and fill in one provider. With no `signing.toml` and no
+# RUSTRMM_SIGN_* environment variables the build skips signing with a warning; it never fails
+# because signing is not configured. Never put passwords or PINs in this file: name the
+# environment variable that holds them instead.
+#
+# CI: every value below can come from the environment instead, e.g.
+#   RUSTRMM_SIGN_PROVIDER=pfx  RUSTRMM_SIGN_PFX_BASE64=<base64 PFX>  RUSTRMM_SIGN_PFX_PASSWORD=…
+# (see docs/signing.md for the full list).
+
+# none | pfx | pkcs11 | azure | apple-devid | apple-selfsigned
+provider = "none"
+
+# RFC 3161 timestamp server for Authenticode (default http://timestamp.digicert.com;
+# http://timestamp.acs.microsoft.com for Azure Trusted Signing).
+# timestamp_url = "http://timestamp.digicert.com"
+
+[windows]
+# "osslsigncode" (default; runs on Linux, macOS and Windows) or "signtool" (Windows SDK).
+# tool = "osslsigncode"
+# osslsigncode = "/usr/bin/osslsigncode"
+# signtool = "C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/signtool.exe"
+# Program name in the UAC prompt and a URL with more information.
+# description = "RustRMM Agent"
+# url = "https://rmm.example.com"
+
+[pfx]
+# provider = "pfx": a code-signing certificate with its private key (.pfx / .p12).
+# path = "C:/secrets/codesign.pfx"
+# password_env = "RUSTRMM_SIGN_PFX_PASSWORD"
+
+[pkcs11]
+# provider = "pkcs11": the key stays on a hardware token or HSM (required for new public
+# certificates since June 2023).
+# osslsigncode:
+# module = "/usr/lib/x86_64-linux-gnu/opensc-pkcs11.so"
+# certificate = "/secrets/codesign-chain.pem"
+# key = "pkcs11:token=CodeSigning;object=codesign;type=private"
+# pin_env = "RUSTRMM_SIGN_PKCS11_PIN"
+# engine = ""   # only for osslsigncode built against OpenSSL 1.x (libp11 engine)
+# signtool (token minidriver, certificate in the user's store):
+# thumbprint = "0123456789ABCDEF0123456789ABCDEF01234567"
+
+[azure]
+# provider = "azure": Azure Trusted Signing (Artifact Signing) via signtool + the dlib.
+# dlib = "C:/tools/Microsoft.Trusted.Signing.Client/bin/x64/Azure.CodeSigning.Dlib.dll"
+# metadata = "C:/secrets/trusted-signing-metadata.json"
+
+[apple]
+# provider = "apple-devid": "Developer ID Application: Example Ltd (TEAMID1234)".
+# provider = "apple-selfsigned": the name of a stable self-signed code-signing identity.
+# identity = "Developer ID Application: Example Ltd (TEAMID1234)"
+# keychain = ""
+# entitlements = ""
+# notary_profile = "rustrmm-notary"   # xcrun notarytool store-credentials rustrmm-notary …
+
+[minisign]
+# Detached signatures for Linux binaries (<file>.minisig), with any provider.
+# secret_key = "/secrets/rustrmm.minisign.key"
+# password_env = "RUSTRMM_SIGN_MINISIGN_PASSWORD"
+# trusted_comment = "RustRMM agent"

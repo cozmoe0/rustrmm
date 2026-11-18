@@ -1,0 +1,196 @@
+name: Release
+
+# Tag `vX.Y.Z` → multi-arch server image on GHCR, agent bundle (Windows exe + MSI, Linux
+# x86-64/ARM64), macOS agent, CycloneDX SBOMs (Rust + web) and SHA256SUMS on a GitHub release.
+#
+# Code signing is optional and never blocks a release when its secrets are absent
+# (docs/signing.md):
+#   Windows (in the Docker build, osslsigncode): RUSTRMM_SIGN_PFX_BASE64, RUSTRMM_SIGN_PFX_PASSWORD
+#   macOS (cargo xtask sign --provider apple-devid): RUSTRMM_SIGN_APPLE_IDENTITY,
+#     APPLE_CERTIFICATE_P12_BASE64, APPLE_CERTIFICATE_PASSWORD, APPLE_NOTARY_KEY_BASE64,
+#     APPLE_NOTARY_KEY_ID, APPLE_NOTARY_ISSUER
+#
+# Every third-party action is pinned to a full commit SHA (the comment names the release).
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  IMAGE: ghcr.io/${{ github.repository_owner }}/rustrmm-server
+
+jobs:
+  sbom:
+    name: CycloneDX SBOMs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Install toolchain from rust-toolchain.toml
+        run: rustup show active-toolchain || rustup toolchain install
+      - name: Rust SBOM (cargo-cyclonedx)
+        run: |
+          cargo install cargo-cyclonedx --locked --version 0.5.10
+          cargo cyclonedx --format json --spec-version 1.5
+          mkdir -p sbom
+          shopt -s nullglob
+          files=(crates/*/*.cdx.json)
+          [ ${#files[@]} -gt 0 ] || { echo "cargo-cyclonedx produced no SBOM" >&2; exit 1; }
+          for f in "${files[@]}"; do cp "$f" "sbom/rustrmm-$(basename "$(dirname "$f")").cdx.json"; done
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Web SBOM (@cyclonedx/cyclonedx-npm)
+        working-directory: web
+        run: |
+          npm ci --ignore-scripts
+          npx --yes @cyclonedx/cyclonedx-npm@7.0.1 --omit dev --output-format JSON \
+            --output-file ../sbom/rustrmm-web.cdx.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: sbom
+          path: sbom/
+
+  image:
+    name: Server image and agent bundle
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
+      # The agent bundle exactly as it ships inside the image (signed when secrets exist).
+      - name: Export the agent bundle
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: .
+          file: deploy/Dockerfile
+          target: bundle-export
+          outputs: type=local,dest=dist/agents
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          secrets: |
+            signing_pfx_b64=${{ secrets.RUSTRMM_SIGN_PFX_BASE64 }}
+            signing_pfx_password=${{ secrets.RUSTRMM_SIGN_PFX_PASSWORD }}
+      - name: Build and push the image
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: .
+          file: deploy/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: ${{ startsWith(github.ref, 'refs/tags/v') }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          sbom: true
+          provenance: mode=max
+          secrets: |
+            signing_pfx_b64=${{ secrets.RUSTRMM_SIGN_PFX_BASE64 }}
+            signing_pfx_password=${{ secrets.RUSTRMM_SIGN_PFX_PASSWORD }}
+      - name: Package the bundle
+        run: |
+          cd dist/agents
+          zip -r "../rustrmm-agents-${GITHUB_REF_NAME}.zip" .
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: agents
+          path: dist/rustrmm-agents-*.zip
+
+  macos:
+    name: macOS agent
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Install toolchain from rust-toolchain.toml
+        run: |
+          rustup show active-toolchain || rustup toolchain install
+          rustup target add x86_64-apple-darwin aarch64-apple-darwin
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - name: Build a universal binary
+        run: |
+          cargo build --release --locked -p rustrmm-agent --target aarch64-apple-darwin
+          cargo build --release --locked -p rustrmm-agent --target x86_64-apple-darwin
+          mkdir -p dist/agents/macos-universal
+          lipo -create -output dist/agents/macos-universal/rustrmm-agent \
+            target/aarch64-apple-darwin/release/rustrmm-agent \
+            target/x86_64-apple-darwin/release/rustrmm-agent
+      - name: Sign and notarize (when configured)
+        env:
+          RUSTRMM_SIGN_APPLE_IDENTITY: ${{ secrets.RUSTRMM_SIGN_APPLE_IDENTITY }}
+          APPLE_CERTIFICATE_P12_BASE64: ${{ secrets.APPLE_CERTIFICATE_P12_BASE64 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_NOTARY_KEY_BASE64: ${{ secrets.APPLE_NOTARY_KEY_BASE64 }}
+          APPLE_NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
+          APPLE_NOTARY_ISSUER: ${{ secrets.APPLE_NOTARY_ISSUER }}
+        run: |
+          if [ -z "$RUSTRMM_SIGN_APPLE_IDENTITY" ] || [ -z "$APPLE_CERTIFICATE_P12_BASE64" ]; then
+            echo "::warning::Apple signing secrets are not set; the macOS agent stays unsigned"
+            exit 0
+          fi
+          keychain="$RUNNER_TEMP/signing.keychain-db"
+          kc_password="$(openssl rand -hex 16)"
+          echo "$APPLE_CERTIFICATE_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security create-keychain -p "$kc_password" "$keychain"
+          security set-keychain-settings -lut 3600 "$keychain"
+          security unlock-keychain -p "$kc_password" "$keychain"
+          security import "$RUNNER_TEMP/cert.p12" -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$keychain"
+          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+          export RUSTRMM_SIGN_PROVIDER=apple-devid
+          if [ -n "$APPLE_NOTARY_KEY_BASE64" ]; then
+            echo "$APPLE_NOTARY_KEY_BASE64" | base64 --decode > "$RUNNER_TEMP/notary.p8"
+            xcrun notarytool store-credentials rustrmm-notary --key "$RUNNER_TEMP/notary.p8" \
+              --key-id "$APPLE_NOTARY_KEY_ID" --issuer "$APPLE_NOTARY_ISSUER" --keychain "$keychain"
+            export RUSTRMM_SIGN_APPLE_NOTARY_PROFILE=rustrmm-notary
+          fi
+          cargo xtask sign --require dist/agents/macos-universal/rustrmm-agent
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: macos-agent
+          path: dist/agents/macos-universal/rustrmm-agent
+
+  release:
+    name: GitHub release
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    needs: [sbom, image, macos]
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          path: assets
+      - name: Checksums
+        run: |
+          mkdir -p upload
+          cp assets/agents/*.zip upload/
+          cp assets/macos-agent/rustrmm-agent "upload/rustrmm-agent-macos-universal"
+          cp assets/sbom/*.cdx.json upload/
+          (cd upload && sha256sum * > SHA256SUMS)
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --verify-tag \
+            --generate-notes upload/*

@@ -1,0 +1,33 @@
+[package]
+name = "rustrmm-sim"
+description = "Simulated RustRMM fleet: N fake agents speaking the real protocol (UI development and load tests)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+rustrmm-common.workspace = true
+rustrmm-crypto.workspace = true
+rustrmm-proto = { workspace = true, features = ["tungstenite"] }
+anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+rmp-serde.workspace = true
+tokio.workspace = true
+futures.workspace = true
+tracing.workspace = true
+clap.workspace = true
+chrono.workspace = true
+url.workspace = true
+base64.workspace = true
+sha2.workspace = true
+hex.workspace = true
+rustls.workspace = true
+rustls-pki-types.workspace = true
+rustls-platform-verifier.workspace = true
+reqwest.workspace = true
+tokio-tungstenite.workspace = true
+
+[lints]
+workspace = true

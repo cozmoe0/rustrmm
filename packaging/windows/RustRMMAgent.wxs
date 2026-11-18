@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  RustRMM agent installer. WiX v3 schema restricted to the subset wixl (msitools) compiles
+  correctly; build with packaging/windows/build-msi.sh (Linux/WSL/Docker), which also applies
+  msibuild fix-ups for what wixl ignores and asserts every table row the product depends on.
+
+  The ProductCode is FIXED: agents self-update by swapping their own binary, so the MSI is only
+  used to install/uninstall and a GPO-assigned package keeps being recognised as installed.
+
+  Deploy key delivery, in order of preference:
+    1. deploy.key next to the .msi (GPO Software Installation, SCCM, Intune Win32): nothing secret
+       is written to any MSI log; the agent reads it from the install source.
+    2. DEPLOY_KEY=… property (push tools): written to a SYSTEM/Administrators-only registry value
+       that the agent deletes after enrolling. NOTE: verbose MSI logs (/l*v) record registry
+       writes, so prefer option 1 where logs are collected centrally.
+-->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="$(var.ProductCode)"
+           UpgradeCode="$(var.UpgradeCode)"
+           Name="RustRMM Agent"
+           Version="$(var.Version)"
+           Manufacturer="RustRMM"
+           Language="1033"
+           Codepage="1252">
+
+    <Package InstallerVersion="500"
+             Compressed="yes"
+             InstallScope="perMachine"
+             Description="RustRMM Agent"
+             Comments="Remote monitoring and management agent" />
+
+    <Media Id="1" Cabinet="agent.cab" EmbedCab="yes" />
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+
+    <Property Id="ARPNOREPAIR" Value="yes" />
+    <Property Id="ARPNOMODIFY" Value="yes" />
+    <Property Id="ARPCONTACT" Value="Your IT provider" />
+    <Property Id="MsiHiddenProperties" Value="DEPLOY_KEY" />
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="VendorDir" Name="RustRMM">
+          <Directory Id="INSTALLDIR" Name="Agent">
+
+            <Component Id="AgentService" Guid="{E2A6C0B1-7D44-4A5E-9F3B-1C8D2E6A4B70}" Win64="yes">
+              <File Id="AgentExe" Name="rustrmm-agent.exe" Source="$(var.AgentExe)" KeyPath="yes" />
+              <ServiceInstall Id="AgentServiceInstall" Name="RustRMMAgent"
+                              DisplayName="RustRMM Agent"
+                              Description="RustRMM remote monitoring and management agent"
+                              Type="ownProcess" Start="auto" ErrorControl="normal"
+                              Account="LocalSystem" Arguments="service" />
+              <ServiceControl Id="AgentServiceControl" Name="RustRMMAgent"
+                              Start="install" Stop="both" Remove="uninstall" Wait="yes" />
+            </Component>
+
+            <!-- Only when DEPLOY_KEY was passed; locked to SYSTEM + Administrators by build-msi.sh. -->
+            <Component Id="DeployKeyValue" Guid="{8C3F5A92-1B6E-4D27-A0C4-5E9B7D3F2A18}" Win64="yes">
+              <Condition>DEPLOY_KEY</Condition>
+              <RegistryValue Id="RegDeployKey" Root="HKLM" Key="SOFTWARE\RustRMM\Agent"
+                             Name="DeployKey" Type="string" Value="[DEPLOY_KEY]" KeyPath="yes" />
+            </Component>
+
+            <!-- Machine-local capability lock (e.g. DISABLE_FEATURES=shell,desktop) the server cannot override. -->
+            <Component Id="DisableFeaturesValue" Guid="{4D7B2E61-9A3C-4F58-B1E0-6C2A8F5D3B94}" Win64="yes">
+              <Condition>DISABLE_FEATURES</Condition>
+              <RegistryValue Id="RegDisableFeatures" Root="HKLM" Key="SOFTWARE\RustRMM\Agent"
+                             Name="DisableFeatures" Type="string" Value="[DISABLE_FEATURES]" KeyPath="yes" />
+            </Component>
+
+          </Directory>
+        </Directory>
+      </Directory>
+    </Directory>
+
+    <Feature Id="Main" Level="1" Title="RustRMM Agent">
+      <ComponentRef Id="AgentService" />
+      <ComponentRef Id="DeployKeyValue" />
+      <ComponentRef Id="DisableFeaturesValue" />
+    </Feature>
+  </Product>
+</Wix>

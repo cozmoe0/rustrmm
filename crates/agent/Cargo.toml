@@ -1,0 +1,105 @@
+[package]
+name = "rustrmm-agent"
+description = "RustRMM endpoint agent for Windows, macOS and Linux"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "rustrmm-agent"
+path = "src/main.rs"
+
+[dependencies]
+rustrmm-common.workspace = true
+rustrmm-crypto.workspace = true
+rustrmm-proto = { workspace = true, features = ["tungstenite"] }
+
+anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+rmp-serde.workspace = true
+tokio.workspace = true
+tokio-util.workspace = true
+futures.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+clap.workspace = true
+chrono.workspace = true
+url.workspace = true
+base64.workspace = true
+hex.workspace = true
+sha2.workspace = true
+zeroize.workspace = true
+rustls.workspace = true
+rustls-pki-types.workspace = true
+rustls-platform-verifier.workspace = true
+reqwest.workspace = true
+tokio-tungstenite.workspace = true
+sysinfo.workspace = true
+hostname.workspace = true
+x509-parser.workspace = true
+# Secrets escrow: age X25519 encryption to the server's escrow recipient.
+age.workspace = true
+# SNMPv3 USM: HMAC-SHA-96 / HMAC-SHA-256-192 and AES-128-CFB (RFC 3414, 7860, 3826).
+hmac.workspace = true
+sha1.workspace = true
+aes = "0.9"
+# ICMP sweeps (raw sockets when privileged, ICMP datagram sockets otherwise).
+socket2 = { version = "0.6", features = ["all"] }
+# Remote desktop tiles: pure-Rust JPEG (the `simd` feature uses std::arch only).
+jpeg-encoder = { version = "0.7", features = ["simd"] }
+
+[target.'cfg(windows)'.dependencies]
+windows-service.workspace = true
+wmi.workspace = true
+winreg.workspace = true
+windows = { workspace = true, features = [
+  "Win32_Foundation",
+  "Win32_Security",
+  "Win32_Security_Cryptography",
+  "Win32_NetworkManagement_NetManagement",
+  "Win32_System_RemoteDesktop",
+  "Win32_System_ApplicationInstallationAndServicing",
+  "Win32_System_Com",
+  "Win32_System_Console",
+  "Win32_System_DataExchange",
+  "Win32_System_LibraryLoader",
+  "Win32_System_Memory",
+  "Win32_System_Ole",
+  "Win32_System_StationsAndDesktops",
+  "Win32_System_SystemServices",
+  "Win32_Graphics_Direct3D",
+  "Win32_Graphics_Direct3D11",
+  "Win32_Graphics_Dxgi",
+  "Win32_Graphics_Dxgi_Common",
+  "Win32_Graphics_Gdi",
+  "Win32_Security_Authorization",
+  "Win32_UI_HiDpi",
+  "Win32_UI_Input_KeyboardAndMouse",
+  "Win32_UI_Shell",
+  "Win32_System_Diagnostics_ToolHelp",
+  "Win32_System_Environment",
+  "Win32_System_IO",
+  "Win32_System_JobObjects",
+  "Win32_System_Pipes",
+  "Win32_System_SystemInformation",
+  "Win32_System_Threading",
+  "Win32_System_UpdateAgent",
+  "Win32_System_Variant",
+  "Win32_Storage_FileSystem",
+  "Win32_UI_WindowsAndMessaging",
+] }
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+# X11 remote desktop: pure-Rust protocol (MIT-SHM capture, XTEST input, XFIXES cursor, RandR).
+x11rb = { version = "0.14", features = ["shm", "xtest", "xfixes", "randr"] }
+
+[dev-dependencies]
+tempfile.workspace = true
+
+[lints]
+workspace = true

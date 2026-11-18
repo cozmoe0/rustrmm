@@ -1,0 +1,17 @@
+[package]
+name = "rustrmm-msi-spike-agent"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "Throwaway spike: Windows service that finds its deploy key via MSI install source"
+
+# Standalone crate: keep it out of the repo-root workspace.
+[workspace]
+
+[[bin]]
+name = "rustrmm-spike-agent"
+path = "src/main.rs"
+
+[target."cfg(windows)".dependencies]
+windows-service = "0.8.1"
+windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_System_ApplicationInstallationAndServicing", "Win32_System_Registry", "Win32_System_SystemInformation"] }

@@ -1,0 +1,348 @@
+[
+  {
+    "id": "win-clear-temp-files", "file": "windows/clear-temp-files.ps1",
+    "name": "Clear temporary files", "category": "Maintenance",
+    "description": "Deletes files older than the given number of days from the Windows temp folder and every user's temp folder. Files in use are skipped.",
+    "language": "powershell", "platforms": ["windows"], "timeout_secs": 1800,
+    "parameters": [
+      { "name": "OlderThanDays", "label": "Older than (days)", "type": "number", "required": false, "default": 7 }
+    ]
+  },
+  {
+    "id": "win-flush-dns", "file": "windows/flush-dns.ps1",
+    "name": "Flush DNS cache", "category": "Network",
+    "description": "Clears the DNS client cache and re-registers the computer's DNS records.",
+    "language": "powershell", "platforms": ["windows"], "timeout_secs": 120
+  },
+  {
+    "id": "win-gpupdate", "file": "windows/gpupdate.ps1",
+    "name": "Refresh Group Policy", "category": "Maintenance",
+    "description": "Re-applies computer Group Policy with gpupdate /force.",
+    "language": "powershell", "platforms": ["windows"], "timeout_secs": 600
+  },
+  {
+    "id": "win-restart-print-spooler", "file": "windows/restart-print-spooler.ps1",
+    "name": "Restart print spooler and clear queue", "category": "Troubleshooting",
+    "description": "Stops the Print Spooler, deletes stuck print jobs (unless turned off) and starts it again.",
+    "language": "powershell", "platforms": ["windows"], "timeout_secs": 300,
+    "parameters": [
+      { "name": "ClearQueue", "label": "Delete queued print jobs", "type": "boolean", "required": false, "default": true }
+    ]
+  },
+  {
+    "id": "win-restart-service", "file": "windows/restart-service.ps1",
+    "name": "Restart a service", "category": "Maintenance",
+    "description": "Restarts one Windows service by name or display name and waits until it is running.",
+    "language": "powershell", "platforms": ["windows"], "timeout_secs": 300,
+    "parameters": [
+      { "name": "ServiceName", "label": "Service name", "description": "Service name or display name, for example Spooler.", "type": "string", "required": true }
+    ]
+  },
+  {
+    "id": "win-pending-reboot", "file": "windows/pending-reboot.ps1",
+    "name": "Check for a pending restart", "category": "Troubleshooting",
+    "description": "Reports whether Windows is waiting for a restart and why. Exits with 1 when a restart is pending.",
+    "language": "powershell", "platforms": ["windows"], "timeout_secs": 120
+  },
+  {
+    "id": "win-bitlocker-status", "file": "windows/bitlocker-status.ps1",
+    "name": "BitLocker status", "category": "Security",
+    "description": "Shows protection, encryption progress and key protectors for every volume. Exits with 1 when the system volume is unprotected.",
+    "language": "powershell", "platforms": ["windows"], "timeout_secs": 120
+  },
+  {
+    "id": "win-defender-quick-scan", "file": "windows/defender-quick-scan.ps1",
+    "name": "Defender quick scan", "category": "Security",
+    "description": "Updates Microsoft Defender signatures, runs a quick scan and lists anything it detected.",
+    "language": "powershell", "platforms": ["windows"], "timeout_secs": 3600
+  },
+  {
+    "id": "win-defender-update-signatures", "file": "windows/defender-update-signatures.ps1",
+    "name": "Update Defender signatures", "category": "Security",
+    "description": "Downloads the latest Microsoft Defender security intelligence and reports its age.",
+    "language": "powershell", "platforms": ["windows"], "timeout_secs": 900
+  },
+  {
+    "id": "win-reset-windows-update", "file": "windows/reset-windows-update.ps1",
+    "name": "Reset Windows Update components", "category": "Updates", "risk": "high",
+    "description": "Stops the update services, renames the SoftwareDistribution and catroot2 caches, resets the WinHTTP proxy and starts a fresh scan.",
+    "language": "powershell", "platforms": ["windows"], "timeout_secs": 1200
+  },
+  {
+    "id": "win-repair-system-files", "file": "windows/repair-system-files.ps1",
+    "name": "Repair system files (DISM and SFC)", "category": "Troubleshooting",
+    "description": "Repairs the component store with DISM /RestoreHealth, then checks protected system files with SFC /scannow.",
+    "language": "powershell", "platforms": ["windows"], "timeout_secs": 7200
+  },
+  {
+    "id": "win-recent-error-events", "file": "windows/recent-error-events.ps1",
+    "name": "Recent error events", "category": "Troubleshooting",
+    "description": "Groups critical and error events from the System and Application logs by source and event id.",
+    "language": "powershell", "platforms": ["windows"], "timeout_secs": 300,
+    "parameters": [
+      { "name": "Hours", "label": "Look back (hours)", "type": "number", "required": false, "default": 24 },
+      { "name": "Top", "label": "Groups to show", "type": "number", "required": false, "default": 25 }
+    ]
+  },
+  {
+    "id": "win-time-sync", "file": "windows/time-sync.ps1",
+    "name": "Resynchronise the clock", "category": "Maintenance",
+    "description": "Starts the Windows Time service if needed, forces a resync and shows the time source.",
+    "language": "powershell", "platforms": ["windows"], "timeout_secs": 180
+  },
+  {
+    "id": "win-kill-process", "file": "windows/kill-process.ps1",
+    "name": "Kill a process by name", "category": "Troubleshooting", "risk": "high",
+    "description": "Terminates every process with the given name. Unsaved work in those processes is lost; critical system processes are refused.",
+    "language": "powershell", "platforms": ["windows"], "timeout_secs": 120,
+    "parameters": [
+      { "name": "ProcessName", "label": "Process name", "description": "For example notepad or notepad.exe.", "type": "string", "required": true }
+    ]
+  },
+  {
+    "id": "win-large-files", "file": "windows/large-files.ps1",
+    "name": "Large file report", "category": "Inventory",
+    "description": "Lists the largest files under a folder (the system drive by default).",
+    "language": "powershell", "platforms": ["windows"], "timeout_secs": 1800,
+    "parameters": [
+      { "name": "SearchPath", "label": "Folder", "description": "Leave empty for the system drive.", "type": "string", "required": false },
+      { "name": "MinSizeMB", "label": "Minimum size (MB)", "type": "number", "required": false, "default": 500 },
+      { "name": "Top", "label": "Files to list", "type": "number", "required": false, "default": 25 }
+    ]
+  },
+  {
+    "id": "win-disk-free-report", "file": "windows/disk-free-report.ps1",
+    "name": "Free space report", "category": "Inventory",
+    "description": "Reports free space on every fixed drive and writes the lowest value to the device custom fields disk_free_gb and disk_free_pct when they exist and allow script writes.",
+    "language": "powershell", "platforms": ["windows"], "timeout_secs": 120
+  },
+  {
+    "id": "win-listening-ports", "file": "windows/listening-ports.ps1",
+    "name": "Listening ports", "category": "Network",
+    "description": "Lists listening TCP ports and UDP endpoints with the owning process.",
+    "language": "powershell", "platforms": ["windows"], "timeout_secs": 120
+  },
+  {
+    "id": "win-pending-updates", "file": "windows/pending-updates.ps1",
+    "name": "Pending Windows updates", "category": "Updates",
+    "description": "Asks Windows Update for applicable updates that are not installed. Exits with 1 when updates are pending.",
+    "language": "powershell", "platforms": ["windows"], "timeout_secs": 900
+  },
+  {
+    "id": "win-local-administrators", "file": "windows/local-administrators.ps1",
+    "name": "Local administrators", "category": "Users",
+    "description": "Lists the members of the local Administrators group, including domain and Entra ID entries.",
+    "language": "powershell", "platforms": ["windows"], "timeout_secs": 120
+  },
+  {
+    "id": "win-logged-on-users", "file": "windows/logged-on-users.ps1",
+    "name": "Signed-in users", "category": "Users",
+    "description": "Shows console and remote desktop sessions with their state and idle time.",
+    "language": "powershell", "platforms": ["windows"], "timeout_secs": 60
+  },
+  {
+    "id": "win-disable-local-user", "file": "windows/disable-local-user.ps1",
+    "name": "Disable a local account", "category": "Users", "risk": "high",
+    "description": "Disables a local user account and signs out its sessions. Refuses the built-in Administrator and the last enabled local administrator.",
+    "language": "powershell", "platforms": ["windows"], "timeout_secs": 120,
+    "parameters": [
+      { "name": "AccountName", "label": "Account name", "type": "string", "required": true }
+    ]
+  },
+  {
+    "id": "win-reset-network-stack", "file": "windows/reset-network-stack.ps1",
+    "name": "Reset the network stack", "category": "Network", "risk": "high",
+    "description": "Resets Winsock and TCP/IP, flushes DNS and renews DHCP leases. Connectivity drops briefly and a restart finishes the reset.",
+    "language": "powershell", "platforms": ["windows"], "timeout_secs": 300
+  },
+  {
+    "id": "win-restart-computer", "file": "windows/restart-computer.ps1",
+    "name": "Restart the computer", "category": "Maintenance", "risk": "high",
+    "description": "Schedules a restart after a delay and shows a message to signed-in users.",
+    "language": "powershell", "platforms": ["windows"], "timeout_secs": 60,
+    "parameters": [
+      { "name": "DelayMinutes", "label": "Delay (minutes)", "type": "number", "required": false, "default": 5 },
+      { "name": "Message", "label": "Message to users", "type": "string", "required": false }
+    ]
+  },
+  {
+    "id": "win-firewall-status", "file": "windows/firewall-status.ps1",
+    "name": "Windows Firewall status", "category": "Security",
+    "description": "Shows each firewall profile and the inbound allow rules open to any address. Exits with 1 when a profile is off.",
+    "language": "powershell", "platforms": ["windows"], "timeout_secs": 300
+  },
+  {
+    "id": "win-installed-software", "file": "windows/installed-software.ps1",
+    "name": "Installed software", "category": "Inventory",
+    "description": "Lists installed programs from the machine-wide uninstall keys, optionally filtered by name.",
+    "language": "powershell", "platforms": ["windows"], "timeout_secs": 120,
+    "parameters": [
+      { "name": "NameContains", "label": "Name contains", "type": "string", "required": false }
+    ]
+  },
+  {
+    "id": "win-uptime-and-boot", "file": "windows/uptime-and-boot.ps1",
+    "name": "Uptime and restart history", "category": "Troubleshooting",
+    "description": "Shows uptime, the last boot and the recorded reasons for recent shutdowns and crashes.",
+    "language": "powershell", "platforms": ["windows"], "timeout_secs": 120
+  },
+  {
+    "id": "linux-package-cache-cleanup", "file": "linux/package-cache-cleanup.sh",
+    "name": "Package cache cleanup", "category": "Maintenance",
+    "description": "Cleans the apt, dnf, yum, zypper, pacman or apk cache and removes packages that are no longer needed.",
+    "language": "bash", "platforms": ["linux"], "timeout_secs": 1800
+  },
+  {
+    "id": "linux-journal-vacuum", "file": "linux/journal-vacuum.sh",
+    "name": "Shrink the systemd journal", "category": "Maintenance",
+    "description": "Rotates the journal and removes old entries beyond the size and age limits.",
+    "language": "bash", "platforms": ["linux"], "timeout_secs": 600,
+    "parameters": [
+      { "name": "MaxSize", "label": "Maximum size", "description": "For example 500M or 2G.", "type": "string", "required": false, "default": "500M" },
+      { "name": "MaxAgeDays", "label": "Maximum age (days)", "type": "number", "required": false, "default": 30 }
+    ]
+  },
+  {
+    "id": "linux-failed-units", "file": "linux/failed-units.sh",
+    "name": "Failed systemd units", "category": "Troubleshooting",
+    "description": "Lists failed systemd units with their last log lines. Exits with 1 when any unit failed.",
+    "language": "bash", "platforms": ["linux"], "timeout_secs": 120
+  },
+  {
+    "id": "linux-pending-updates", "file": "linux/pending-updates.sh",
+    "name": "Pending package updates", "category": "Updates",
+    "description": "Lists packages with available updates, security updates first. Exits with 1 when updates are pending.",
+    "language": "bash", "platforms": ["linux"], "timeout_secs": 900
+  },
+  {
+    "id": "linux-install-updates", "file": "linux/install-updates.sh",
+    "name": "Install package updates", "category": "Updates", "risk": "high",
+    "description": "Installs all available updates (or only security updates) non-interactively. Services may restart.",
+    "language": "bash", "platforms": ["linux"], "timeout_secs": 7200,
+    "parameters": [
+      { "name": "SecurityOnly", "label": "Security updates only", "type": "boolean", "required": false, "default": false }
+    ]
+  },
+  {
+    "id": "linux-restart-service", "file": "linux/restart-service.sh",
+    "name": "Restart a systemd service", "category": "Maintenance",
+    "description": "Restarts a systemd unit and shows its status, or its recent log when the restart fails.",
+    "language": "bash", "platforms": ["linux"], "timeout_secs": 300,
+    "parameters": [
+      { "name": "ServiceName", "label": "Unit name", "description": "For example nginx or nginx.service.", "type": "string", "required": true }
+    ]
+  },
+  {
+    "id": "linux-flush-dns", "file": "linux/flush-dns.sh",
+    "name": "Flush DNS cache", "category": "Network",
+    "description": "Flushes systemd-resolved, nscd, dnsmasq or unbound, whichever is running.",
+    "language": "bash", "platforms": ["linux"], "timeout_secs": 120
+  },
+  {
+    "id": "linux-time-sync", "file": "linux/time-sync.sh",
+    "name": "Check and step the clock", "category": "Maintenance",
+    "description": "Shows synchronisation status and asks chrony or systemd-timesyncd to synchronise now.",
+    "language": "bash", "platforms": ["linux"], "timeout_secs": 180
+  },
+  {
+    "id": "linux-user-accounts", "file": "linux/user-accounts.sh",
+    "name": "User accounts and admins", "category": "Users",
+    "description": "Lists accounts that can log in, members of sudo, wheel and admin, UID 0 accounts and recent logins.",
+    "language": "bash", "platforms": ["linux"], "timeout_secs": 120
+  },
+  {
+    "id": "linux-reboot-required", "file": "linux/reboot-required.sh",
+    "name": "Check for a pending restart", "category": "Troubleshooting",
+    "description": "Reports whether a restart is needed for new packages or a newer kernel. Exits with 1 when one is pending.",
+    "language": "bash", "platforms": ["linux"], "timeout_secs": 120
+  },
+  {
+    "id": "unix-listening-ports", "file": "unix/listening-ports.sh",
+    "name": "Listening ports", "category": "Network",
+    "description": "Lists listening TCP ports and bound UDP sockets with the owning process (ss or lsof).",
+    "language": "bash", "platforms": ["linux", "macos"], "timeout_secs": 120
+  },
+  {
+    "id": "unix-ssh-config-audit", "file": "unix/ssh-config-audit.sh",
+    "name": "SSH server configuration audit", "category": "Security",
+    "description": "Checks the effective sshd configuration against common hardening settings. Exits with 1 when there are findings.",
+    "language": "bash", "platforms": ["linux", "macos"], "timeout_secs": 120
+  },
+  {
+    "id": "unix-disk-free-report", "file": "unix/disk-free-report.sh",
+    "name": "Free space report", "category": "Inventory",
+    "description": "Reports free space on local file systems and writes the lowest value to the device custom fields disk_free_gb and disk_free_pct when they exist and allow script writes.",
+    "language": "sh", "platforms": ["linux", "macos"], "timeout_secs": 120
+  },
+  {
+    "id": "unix-large-files", "file": "unix/large-files.sh",
+    "name": "Large file report", "category": "Inventory",
+    "description": "Lists the largest files under a directory without crossing into other file systems.",
+    "language": "sh", "platforms": ["linux", "macos"], "timeout_secs": 1800,
+    "parameters": [
+      { "name": "SearchPath", "label": "Directory", "type": "string", "required": false, "default": "/" },
+      { "name": "MinSizeMB", "label": "Minimum size (MB)", "type": "number", "required": false, "default": 500 },
+      { "name": "Top", "label": "Files to list", "type": "number", "required": false, "default": 25 }
+    ]
+  },
+  {
+    "id": "unix-kill-process", "file": "unix/kill-process.sh",
+    "name": "Kill a process by name", "category": "Troubleshooting", "risk": "high",
+    "description": "Sends TERM, then KILL after five seconds, to every process with the exact name. Unsaved work is lost.",
+    "language": "sh", "platforms": ["linux", "macos"], "timeout_secs": 120,
+    "parameters": [
+      { "name": "ProcessName", "label": "Process name", "type": "string", "required": true }
+    ]
+  },
+  {
+    "id": "macos-softwareupdate-list", "file": "macos/softwareupdate-list.sh",
+    "name": "Available macOS updates", "category": "Updates",
+    "description": "Lists available software updates without installing anything. Exits with 1 when updates are available.",
+    "language": "zsh", "platforms": ["macos"], "timeout_secs": 900
+  },
+  {
+    "id": "macos-gatekeeper-sip-status", "file": "macos/gatekeeper-sip-status.sh",
+    "name": "Gatekeeper and SIP status", "category": "Security",
+    "description": "Reports Gatekeeper, System Integrity Protection and XProtect. Exits with 1 when Gatekeeper or SIP is off.",
+    "language": "zsh", "platforms": ["macos"], "timeout_secs": 60
+  },
+  {
+    "id": "macos-filevault-status", "file": "macos/filevault-status.sh",
+    "name": "FileVault status", "category": "Security",
+    "description": "Reports FileVault encryption and the users who can unlock the disk. Exits with 1 when FileVault is off.",
+    "language": "zsh", "platforms": ["macos"], "timeout_secs": 60
+  },
+  {
+    "id": "macos-firewall-status", "file": "macos/firewall-status.sh",
+    "name": "macOS firewall status", "category": "Security",
+    "description": "Shows the application firewall state, stealth mode and application rules. Exits with 1 when the firewall is off.",
+    "language": "zsh", "platforms": ["macos"], "timeout_secs": 60
+  },
+  {
+    "id": "macos-flush-dns", "file": "macos/flush-dns.sh",
+    "name": "Flush DNS cache", "category": "Network",
+    "description": "Flushes the directory service cache and mDNSResponder.",
+    "language": "zsh", "platforms": ["macos"], "timeout_secs": 60
+  },
+  {
+    "id": "macos-local-admins", "file": "macos/local-admins.sh",
+    "name": "Local accounts and admins", "category": "Users",
+    "description": "Lists local user accounts and marks the administrators.",
+    "language": "zsh", "platforms": ["macos"], "timeout_secs": 60
+  },
+  {
+    "id": "macos-time-sync", "file": "macos/time-sync.sh",
+    "name": "Resynchronise the clock", "category": "Maintenance",
+    "description": "Switches network time on if needed and steps the clock against the configured time server.",
+    "language": "zsh", "platforms": ["macos"], "timeout_secs": 120
+  },
+  {
+    "id": "macos-clear-temp-files", "file": "macos/clear-temp-files.sh",
+    "name": "Clear temporary files", "category": "Maintenance",
+    "description": "Deletes files older than the given number of days from the shared temporary folders and user cache folders.",
+    "language": "zsh", "platforms": ["macos"], "timeout_secs": 1800,
+    "parameters": [
+      { "name": "OlderThanDays", "label": "Older than (days)", "type": "number", "required": false, "default": 7 }
+    ]
+  }
+]
