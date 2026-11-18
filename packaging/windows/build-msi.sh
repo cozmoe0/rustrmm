@@ -12,6 +12,7 @@ set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 exe="${1:?usage: build-msi.sh <rustrmm-agent.exe> <version> [out.msi]}"
 version="${2:?version required, e.g. 0.1.0}"
+version="${version//$'\r'/}"   # tolerate a version read from a CRLF checkout
 out="${3:-$here/../../dist/agents/windows-x86_64/RustRMMAgent-x64.msi}"
 mkdir -p "$(dirname "$out")"
 
@@ -29,10 +30,13 @@ else
 fi
 
 expect() {
-  local table=$1 pattern=$2
-  if ! "${MSIINFO[@]}" export "$out" "$table" | tail -n +4 | tr -d '\r' | grep -qP "$pattern"; then
+  local table=$1 pattern=$2 rows
+  # Read the table first: `grep -q` at the end of a pipe exits on the first match, and with
+  # pipefail the writer's SIGPIPE would turn a successful match into a failure.
+  rows="$("${MSIINFO[@]}" export "$out" "$table" | tail -n +4 | tr -d '\r')"
+  if ! grep -qP "$pattern" <<<"$rows"; then
     echo "ASSERTION FAILED: table $table has no row matching /$pattern/" >&2
-    "${MSIINFO[@]}" export "$out" "$table" | tail -n +4 >&2
+    printf '%s\n' "$rows" >&2
     exit 1
   fi
 }

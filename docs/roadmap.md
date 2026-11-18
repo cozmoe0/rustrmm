@@ -27,7 +27,7 @@ Each phase ends with something demoable end to end. Status as of 2026-11-18.
 
 - Install the MSI elevated on a real machine and run a full self-update with rollback (needs an administrator prompt).
 - Group Policy deployment in a lab domain (Software Installation with sidecar `deploy.key`, startup script).
-- `docker compose build` on a machine with Docker (the image build was written but not run here).
+- Docker: the full image build (console, agents for three targets, MSI, server) and `docker compose up` were verified on Docker Desktop (linux/amd64); a native Linux host and a multi-arch `buildx` build are still to run.
 - macOS agent build and test on a Mac or CI macOS runner.
 - Remote shell as the signed-in user (per-session broker, spike recommendation) — shells currently run as SYSTEM/root.
 - Remote shell and tools under the real Windows service (LocalSystem) and on Linux/macOS hosts; verified so far from a foreground agent.
@@ -40,8 +40,8 @@ Each phase ends with something demoable end to end. Status as of 2026-11-18.
   was available. The signing-status parser was checked against real Authenticode-signed exes and
   MSIs. MSI digests are not recomputed (signer only).
 - **Release workflow** (`.github/workflows/release.yml`: SBOMs, bundle export, multi-arch image,
-  macOS signing, GitHub release) has not run on GitHub yet; the Docker build with the new signing
-  step was not run here (no Docker).
+  macOS signing, GitHub release) has not run on GitHub yet; the Docker signing step ran only
+  without secrets (unsigned path).
 - **cargo-fuzz** targets build on stable (`cargo check` of `fuzz/`) and run as stable smoke tests;
   no nightly toolchain was available, so no libFuzzer campaign has been run yet.
 - **Noise key rotation:** agents pin the server's Noise key permanently; rotating `keys/noise.key`

@@ -31,10 +31,17 @@ RUN apt-get update \
  && curl -fsSL "https://ziglang.org/download/${ZIG_VERSION}/zig-${arch}-linux-${ZIG_VERSION}.tar.xz" -o /tmp/zig.tar.xz \
  && mkdir -p /opt/zig && tar -xJf /tmp/zig.tar.xz -C /opt/zig --strip-components=1 && rm /tmp/zig.tar.xz \
  && ln -s /opt/zig/zig /usr/local/bin/zig \
- && cargo install --locked cargo-zigbuild \
- && rustup target add x86_64-unknown-linux-musl aarch64-unknown-linux-musl x86_64-pc-windows-gnu
+ && cargo install --locked cargo-zigbuild
 WORKDIR /src
-COPY Cargo.toml Cargo.lock rust-toolchain.toml ./
+# rust-toolchain.toml pins the toolchain by channel ("1.98"), which rustup treats as a different
+# toolchain from the base image's ("1.98.1"). Install the pinned one with the cross targets here,
+# inside /src, so cargo uses it instead of downloading a bare toolchain without them.
+COPY rust-toolchain.toml ./
+RUN rustup toolchain install \
+ && rustup target add x86_64-unknown-linux-musl aarch64-unknown-linux-musl x86_64-pc-windows-gnu \
+ && rustup show active-toolchain \
+ && rustup target list --installed
+COPY Cargo.toml Cargo.lock ./
 COPY .cargo .cargo
 COPY crates crates
 
@@ -61,7 +68,7 @@ COPY packaging /packaging
 COPY Cargo.toml /src/Cargo.toml
 COPY --from=agents /dist /dist
 RUN --mount=type=secret,id=signing_pfx_b64 --mount=type=secret,id=signing_pfx_password \
-    version="$(sed -n 's/^version = "\(.*\)"/\1/p' /src/Cargo.toml | head -1)" \
+    version="$(tr -d '\r' < /src/Cargo.toml | sed -n 's/^version = "\(.*\)"/\1/p' | head -1)" \
  && sh /packaging/windows/sign.sh /dist/windows-x86_64/rustrmm-agent.exe \
  && bash /packaging/windows/build-msi.sh /dist/windows-x86_64/rustrmm-agent.exe "$version" /dist/windows-x86_64/RustRMMAgent-x64.msi \
  && sh /packaging/windows/sign.sh /dist/windows-x86_64/RustRMMAgent-x64.msi \
