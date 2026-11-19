@@ -64,7 +64,7 @@ describe('desktop policy keys', () => {
     expect(merged.document.remote_access).toEqual({ desktop: true, consent_timeout_secs: 45, desktop_view_only: true })
     expect(merged.origins['remote_access.desktop_view_only']).toBe('client')
     const rows = effectiveRows({ ...merged, sources: [] })
-    expect(rows.find((row) => row.path === 'remote_access.desktop_consent')?.value).toBe('Ask when a user is present')
+    expect(rows.find((row) => row.path === 'remote_access.desktop_consent')?.value).toBe('Never ask')
     expect(rows.find((row) => row.path === 'remote_access.consent_timeout_secs')?.value).toBe('45 s')
     expect(rows.find((row) => row.path === 'remote_access.desktop')?.tone).toBe('allowed')
   })

@@ -46,6 +46,7 @@ pub async fn create(
 ) -> anyhow::Result<(String, SessionRecord)> {
     let token = rustrmm_crypto::random::token();
     let now = rustrmm_common::now();
+    let expires_at = now + Duration::hours(state.args.session_max_hours.max(1));
     let record = SessionRecord {
         id: token_id(&token),
         user_id: user_id.to_string(),
@@ -53,9 +54,9 @@ pub async fn create(
         created_at: now,
         last_seen_at: now,
         idle_expires_at: now + Duration::minutes(state.args.session_idle_minutes.max(5)),
-        expires_at: now + Duration::hours(state.args.session_max_hours.max(1)),
-        // Signing in with MFA counts as a fresh step-up for a few minutes.
-        stepped_up_until: stepped_up.then(|| now + Duration::minutes(5)),
+        expires_at,
+        // Signing in with MFA counts as a step-up for the whole session.
+        stepped_up_until: stepped_up.then_some(expires_at),
         ip,
         user_agent: user_agent.map(|ua| ua.chars().take(400).collect()),
     };
@@ -133,15 +134,12 @@ pub async fn revoke_all_for_user(db: &Db, user_id: &str, keep: Option<&str>) -> 
     Ok(())
 }
 
-pub async fn mark_stepped_up(
-    db: &Db,
-    session_id: &str,
-    minutes: i64,
-) -> anyhow::Result<DateTime<Utc>> {
-    let until = rustrmm_common::now() + Duration::minutes(minutes);
+/// Marks a session stepped up until it expires: one MFA confirmation lasts the whole session.
+pub async fn mark_stepped_up(db: &Db, session: &SessionRecord) -> anyhow::Result<DateTime<Utc>> {
+    let until = session.expires_at;
     sqlx::query("UPDATE sessions SET stepped_up_until = ? WHERE id = ?")
         .bind(until)
-        .bind(session_id)
+        .bind(&session.id)
         .execute(db)
         .await?;
     Ok(until)

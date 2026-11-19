@@ -18,8 +18,6 @@ use crate::error::{ApiError, ApiResult};
 use crate::rbac::ScopeSummary;
 use crate::state::AppState;
 
-const STEP_UP_MINUTES: i64 = 5;
-
 #[derive(Serialize)]
 pub struct MeUser {
     id: String,
@@ -288,7 +286,7 @@ pub async fn step_up(
         .bind(&ctx.user.id)
         .execute(&state.db)
         .await?;
-    let until = session::mark_stepped_up(&state.db, &ctx.session.id, STEP_UP_MINUTES).await?;
+    let until = session::mark_stepped_up(&state.db, &ctx.session).await?;
     state
         .audit
         .record_or_log(
@@ -362,7 +360,7 @@ pub async fn step_up_webauthn_finish(
         }
     }
     delete_challenge(&state, &challenge.id).await?;
-    let until = session::mark_stepped_up(&state.db, &ctx.session.id, STEP_UP_MINUTES).await?;
+    let until = session::mark_stepped_up(&state.db, &ctx.session).await?;
     state
         .audit
         .record_or_log(

@@ -16,7 +16,7 @@ Errors use the standard envelope `{"error": {"code", "message", "details?"}}`.
 | 504 | `device_timeout` | The agent did not answer in time (60 s queries, 90 s actions) |
 | 422 | `device_error` | The agent refused or failed; `message` is the agent's reason (for example "shell is disabled on this device by local policy", "Access is denied") |
 | 409 | `tunnel_failed` | A shell or file-transfer tunnel could not be opened |
-| 403 | `step_up_required` | Repeat MFA within the last 5 minutes, then retry |
+| 403 | `step_up_required` | Confirm MFA on this session (it then lasts until the session ends), then retry |
 | 403 | `forbidden` | Missing permission (`details.permission`) |
 
 ## Permissions
@@ -93,7 +93,7 @@ returns `422` with `device_error`.
 `POST /devices/{id}/power` with body
 `{ "action": "reboot" | "shutdown" | "cancel" | "lock" | "logoff", "delay_secs": 0, "message": "" }`.
 
-- `reboot`, `shutdown` and `logoff` need a recent MFA step-up.
+- `reboot`, `shutdown` and `logoff` need an MFA step-up on the session.
 - `cancel` aborts a pending delayed reboot or shutdown.
 - Linux rounds delays up to whole minutes. macOS supports only reboot, shutdown and cancel.
 

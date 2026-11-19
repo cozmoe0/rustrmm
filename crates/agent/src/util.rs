@@ -120,6 +120,9 @@ pub fn harden_data_dir(paths: &Paths) {
     {
         let dir = paths.data_dir.to_string_lossy().to_string();
         // Well-known SIDs avoid localisation issues: S-1-5-18 = SYSTEM, S-1-5-32-544 = Administrators.
+        // Protect only the directory itself: combining `/inheritance:r` with `/T` strips every
+        // file's inherited ACEs while the `(OI)(CI)` grants never land on files, leaving them
+        // with an empty DACL that even SYSTEM cannot read (the agent then exits on start-up).
         let _ = run(
             "icacls",
             &[
@@ -128,10 +131,17 @@ pub fn harden_data_dir(paths: &Paths) {
                 "/grant:r",
                 "*S-1-5-18:(OI)(CI)F",
                 "*S-1-5-32-544:(OI)(CI)F",
-                "/T",
                 "/C",
                 "/Q",
             ],
+            Duration::from_secs(30),
+        );
+        // Everything below inherits that ACL; `/reset` also repairs files left with an empty
+        // DACL by earlier agent versions.
+        let children = format!("{dir}\\*");
+        let _ = run(
+            "icacls",
+            &[&children, "/reset", "/T", "/C", "/Q"],
             Duration::from_secs(30),
         );
         let _ = run(

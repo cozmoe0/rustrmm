@@ -858,7 +858,7 @@ Write-Output "Mapped $($env:DriveLetter): to $env:SharePath"`,
       version: 7,
       document: {
         agent: { heartbeat_secs: 30, metrics_secs: 60, inventory_minutes: 240 },
-        remote_access: { shell: true, files: true, system: true, power: true, desktop: true, desktop_consent: 'when_user_present', desktop_banner: true },
+        remote_access: { shell: true, files: true, system: true, power: true, desktop: true, desktop_consent: 'never', desktop_banner: true },
         tasks: [
           {
             id: 'weekly-temp-cleanup',

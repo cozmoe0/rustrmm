@@ -93,7 +93,7 @@ export const CONSENT_TIMEOUT_RANGE = { min: 5, max: 300 } as const
 
 /** Values that apply when no policy sets a key (docs/api-desktop.md). */
 export const DESKTOP_POLICY_DEFAULTS = {
-  desktop_consent: 'when_user_present' as DesktopConsentMode,
+  desktop_consent: 'never' as DesktopConsentMode,
   consent_timeout_secs: 30,
   desktop_banner: true,
   desktop_view_only: false,

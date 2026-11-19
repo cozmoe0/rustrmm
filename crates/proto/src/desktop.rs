@@ -303,10 +303,11 @@ impl Quality {
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ConsentMode {
+    /// Nobody is asked (the default).
+    #[default]
     Never,
     Always,
     /// Ask only when a user is signed in and the session is unlocked.
-    #[default]
     WhenUserPresent,
 }
 

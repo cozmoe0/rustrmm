@@ -100,7 +100,7 @@ export function StepUpProvider() {
           <DialogTitle>Confirm it&apos;s you</DialogTitle>
           <DialogDescription>
             This action is sensitive. Enter a code from your authenticator app to continue — you won&apos;t be
-            asked again for a few minutes.
+            asked again until you sign out.
           </DialogDescription>
         </DialogHeader>
 

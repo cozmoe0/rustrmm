@@ -29,7 +29,7 @@ export function desktopPolicyFor(device: MockDevice): DesktopPolicy {
   return {
     enabled,
     refusedBy: !enabled && origin ? { id: origin.policy_id, name: origin.policy_name } : null,
-    consent: remote.desktop_consent ?? 'when_user_present',
+    consent: remote.desktop_consent ?? 'never',
     timeoutSecs: remote.consent_timeout_secs ?? 30,
     banner: remote.desktop_banner ?? true,
     viewOnly: remote.desktop_view_only ?? false,

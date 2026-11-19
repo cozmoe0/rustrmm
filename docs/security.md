@@ -55,7 +55,7 @@ expose the fleet.
   socket the agent dials with a one-time token delivered inside that signed command.
 - Permissions are split (`remote.shell`, `remote.files`, `remote.system`, `remote.power`,
   `remote.recordings`) and checked against the device's client/site scope. Opening a shell and
-  reboot/shutdown/sign-out need a recent MFA step-up.
+  reboot/shutdown/sign-out need an MFA step-up on the session.
 - Shells are recorded (asciicast v2 in `/data/recordings`), end on sign-out, session revocation,
   device revocation, 30 minutes without input or after 8 hours, and every open/close, file transfer,
   file change, process kill, service action and power action is in the audit log.
@@ -75,7 +75,8 @@ expose the fleet.
   and absolute expiry, revocable; CSRF header on every mutation; strict `Origin` checks; one-time
   30-second tickets for WebSockets.
 - **Step-up** re-authentication for destructive or sensitive actions (deleting clients/sites/users,
-  revoking devices, backup settings/downloads, agent rollouts, regenerating recovery codes).
+  revoking devices, backup settings/downloads, agent rollouts, regenerating recovery codes). Signing
+  in with MFA, or one step-up, covers the rest of the session.
 - First-run setup is gated by a token printed to the server console, and ends with a recovery kit
   (master key + backup decryption identity) the owner must store.
 - Strict CSP (`script-src 'self'`), HSTS, frame denial, no-referrer, COOP/CORP.

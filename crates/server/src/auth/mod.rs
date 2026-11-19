@@ -118,7 +118,8 @@ impl AuthCtx {
         }
     }
 
-    /// Requires a recent MFA confirmation on this session.
+    /// Requires an MFA confirmation on this session (MFA sign-in or a step-up; it lasts until the
+    /// session ends).
     pub fn require_step_up(&self) -> ApiResult<()> {
         if self.session.is_stepped_up() {
             Ok(())

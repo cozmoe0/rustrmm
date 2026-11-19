@@ -627,7 +627,7 @@ async fn desktop_sessions_end_to_end() {
             assert_eq!(session_id, Some(1));
             assert!(!view_only);
             assert_eq!(quality, Quality::Medium);
-            assert_eq!(consent, ConsentMode::WhenUserPresent, "documented default");
+            assert_eq!(consent, ConsentMode::Never, "documented default");
             assert_eq!(consent_timeout_secs, 30);
             assert!(banner);
             assert_eq!(technician, "Olivia Owner");

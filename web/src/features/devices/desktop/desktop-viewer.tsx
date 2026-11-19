@@ -37,6 +37,7 @@ import { saveBlob } from '@/lib/api/client'
 import { desktopApi } from '@/lib/api/endpoints'
 import { effectivePolicyQuery, keys } from '@/lib/api/queries'
 import type { DeviceDetail } from '@/lib/api/types'
+import { DESKTOP_POLICY_DEFAULTS } from '@/lib/automation/policy'
 import { copyText } from '@/lib/clipboard'
 import type { DesktopQuality } from '@/lib/desktop/control'
 import { SPECIAL_KEYS, type SpecialKey } from '@/lib/desktop/input'
@@ -154,8 +155,8 @@ export default function DesktopViewer({ device, active, variant = 'embedded', in
   const cachedShot = useQuery<ScreenshotData>({ queryKey: keys.desktopScreenshot(device.id), queryFn: () => Promise.reject(new Error('not cached')), enabled: false })
   const remotePolicy = policy.data?.document.remote_access
   const forcedViewOnly = remotePolicy?.desktop_view_only === true
-  const consentMode = remotePolicy?.desktop_consent ?? 'when_user_present'
-  const consentTimeout = remotePolicy?.consent_timeout_secs ?? 30
+  const consentMode = remotePolicy?.desktop_consent ?? DESKTOP_POLICY_DEFAULTS.desktop_consent
+  const consentTimeout = remotePolicy?.consent_timeout_secs ?? DESKTOP_POLICY_DEFAULTS.consent_timeout_secs
   const banner = remotePolicy?.desktop_banner !== false
 
   const items = sessions.data?.items ?? []

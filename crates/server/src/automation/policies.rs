@@ -721,7 +721,7 @@ impl Default for DesktopPolicy {
     fn default() -> Self {
         Self {
             disabled_by: None,
-            consent: rustrmm_proto::desktop::ConsentMode::WhenUserPresent,
+            consent: rustrmm_proto::desktop::ConsentMode::Never,
             consent_timeout_secs: 30,
             banner: true,
             view_only: false,
@@ -730,7 +730,7 @@ impl Default for DesktopPolicy {
 }
 
 /// Reads the desktop keys of an effective document; absent keys take the documented defaults
-/// (desktop on, consent when a user is present, 30 s timeout, banner on, not view-only).
+/// (desktop on, no consent prompt, 30 s timeout, banner on, not view-only).
 pub fn desktop_policy(document: &Value, origins: &BTreeMap<String, String>) -> DesktopPolicy {
     let remote = document.get("remote_access");
     let get = |key: &str| remote.and_then(|r| r.get(key));
@@ -1472,15 +1472,12 @@ mod tests {
             DesktopPolicy::default()
         );
         let defaults = DesktopPolicy::default();
-        assert_eq!(
-            defaults.consent,
-            rustrmm_proto::desktop::ConsentMode::WhenUserPresent
-        );
+        assert_eq!(defaults.consent, rustrmm_proto::desktop::ConsentMode::Never);
         assert_eq!(defaults.consent_timeout_secs, 30);
         assert!(defaults.banner && !defaults.view_only);
 
         // A later layer switches desktop off; the origin names the policy that did it.
-        let global = json!({ "remote_access": { "desktop": true, "desktop_consent": "never" } });
+        let global = json!({ "remote_access": { "desktop": true, "desktop_consent": "always" } });
         let site = json!({ "remote_access": { "desktop": false } });
         let (merged, origins) = merge(&[
             Layer {
@@ -1494,7 +1491,7 @@ mod tests {
         ]);
         let policy = desktop_policy(&merged, &origins);
         assert_eq!(policy.disabled_by.as_deref(), Some("ps"));
-        assert_eq!(policy.consent, rustrmm_proto::desktop::ConsentMode::Never);
+        assert_eq!(policy.consent, rustrmm_proto::desktop::ConsentMode::Always);
         for ok in ["never", "always", "when_user_present"] {
             assert!(
                 validate_structure(&json!({ "remote_access": { "desktop_consent": ok } })).is_ok()

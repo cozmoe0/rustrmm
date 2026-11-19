@@ -10,20 +10,20 @@ capture-loop design" sections before implementing.
 
 ## Permissions and policy
 
-- **Permission:** `remote.desktop`. Starting a session also needs a step-up within the last 5 minutes.
+- **Permission:** `remote.desktop`. Starting a session also needs a step-up on the console session (MFA sign-in counts).
 - **Policy section:** `remote_access` gains these keys (all optional):
 
 ```jsonc
 { "remote_access": {
     "desktop": true,
-    "desktop_consent": "when_user_present",   // never | always | when_user_present
+    "desktop_consent": "never",               // never | always | when_user_present
     "consent_timeout_secs": 30,               // no answer = denied
     "desktop_banner": true,                   // on-screen "Remote session in progress" banner on the device
     "desktop_view_only": false } }            // force view-only for everyone
 ```
 
-- **Defaults:** an absent key takes the value shown above (desktop on, consent when a user is
-  present, 30 s, banner on, not view-only). `consent_timeout_secs` must be a whole number from 5 to
+- **Defaults:** an absent key takes the value shown above (desktop on, no consent prompt, 30 s,
+  banner on, not view-only). `consent_timeout_secs` must be a whole number from 5 to
   300; the validator rejects other values, unknown keys and wrong types with a path such as
   `remote_access.desktop_consent`.
 - **Enforcement:** `desktop: false` refuses the session list, new sessions and screenshots with

@@ -133,7 +133,7 @@ Revocation drops live connections immediately.
 - Argon2id passwords (min 12 chars), progressive lockout, per-IP and per-account rate limits.
 - Sessions: 256-bit random tokens stored as SHA-256 hashes; `__Host-rustrmm_session` cookie (Secure, HttpOnly, SameSite=Strict); idle 30 min / absolute 12 h; rotated on login and privilege change; users can list and revoke sessions; open tunnels are killed on logout or role change.
 - CSRF token header on every state-changing request; strict `Origin` check plus one-time 30-second tickets (bound to session, device and purpose) on every WebSocket upgrade.
-- MFA mandatory (TOTP or passkeys, hashed recovery codes). **Step-up re-authentication** (MFA within 5 min) before shell, desktop, script runs, secret reveals, mass actions, user/role changes, backup download/restore and key/signing settings.
+- MFA mandatory (TOTP or passkeys, hashed recovery codes). **Step-up re-authentication** (MFA on the session: MFA sign-in or one step-up lasts until the session ends) before shell, desktop, script runs, secret reveals, mass actions, user/role changes, backup download/restore and key/signing settings.
 - SSO via OIDC (Entra ID, Google, Okta, Keycloak, Authentik) with group → role mapping; a local owner account stays as break-glass.
 - API tokens: prefixed, 256-bit, stored hashed, scoped (permissions + clients), expiring, optional IP allowlist.
 - Headers: strict CSP (`script-src 'self'`, no inline scripts; `style-src` relaxed only if a component library needs it), `frame-ancestors 'none'`, HSTS, nosniff, `Referrer-Policy: no-referrer`, COOP/CORP. Body limits and timeouts everywhere. Outbound webhooks block private/loopback/link-local targets unless allowlisted (SSRF).

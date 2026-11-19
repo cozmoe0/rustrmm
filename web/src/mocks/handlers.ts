@@ -37,7 +37,8 @@ import { acceptSsoChallenge, platformHandlers, ssoBlocksPassword } from './platf
 import { API, actor, currentUser, fail, guard, latency, noContent, sleep } from './http-helpers'
 
 const MOCK_TOTP = '123456'
-const STEP_UP_MS = 5 * 60_000
+/** Mock sessions last 12 hours; one MFA confirmation (sign-in or step-up) covers all of it. */
+const SESSION_MS = 12 * 3_600_000
 
 function buildMe(): Me {
   const user = currentUser()!
@@ -57,7 +58,7 @@ function buildMe(): Me {
     organization: { name: db.organization },
     session: {
       id: session.id,
-      expires_at: new Date(now + 12 * 3_600_000).toISOString(),
+      expires_at: new Date(now + SESSION_MS).toISOString(),
       idle_expires_at: new Date(now + 30 * 60_000).toISOString(),
       stepped_up_until:
         session.steppedUpUntil && session.steppedUpUntil > now ? new Date(session.steppedUpUntil).toISOString() : null,
@@ -66,7 +67,8 @@ function buildMe(): Me {
 }
 
 function startSession() {
-  db.session = { id: uuid(), csrf: `mock-csrf-${randomHex(24)}`, steppedUpUntil: null, createdAt: new Date().toISOString() }
+  // Every mock sign-in finishes with MFA, which counts as a step-up for the whole session.
+  db.session = { id: uuid(), csrf: `mock-csrf-${randomHex(24)}`, steppedUpUntil: Date.now() + SESSION_MS, createdAt: new Date().toISOString() }
   db.challenge = null
   const user = currentUser()
   if (user) user.last_login_at = new Date().toISOString()
@@ -358,7 +360,7 @@ export const handlers = [
     if (denied) return denied
     const { code } = (await request.json()) as { code: string }
     if (code !== MOCK_TOTP) return fail(401, 'invalid_code', 'That code is incorrect. Mock code: 123456.')
-    db.session!.steppedUpUntil = Date.now() + STEP_UP_MS
+    db.session!.steppedUpUntil = Date.now() + SESSION_MS
     recordAudit({ actor: actor(), action: 'auth.step_up', target: null, client_id: null, site_id: null, ip: '10.20.0.14', user_agent: navigator.userAgent, details: { method: 'totp' } })
     persist()
     return HttpResponse.json({ stepped_up_until: new Date(db.session!.steppedUpUntil).toISOString() })
@@ -373,7 +375,7 @@ export const handlers = [
     await latency()
     const denied = guard(request)
     if (denied) return denied
-    db.session!.steppedUpUntil = Date.now() + STEP_UP_MS
+    db.session!.steppedUpUntil = Date.now() + SESSION_MS
     persist()
     return HttpResponse.json({ stepped_up_until: new Date(db.session!.steppedUpUntil).toISOString() })
   }),
