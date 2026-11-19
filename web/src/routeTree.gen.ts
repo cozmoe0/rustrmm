@@ -43,6 +43,7 @@ import { Route as AppDashboardsDashboardIdRouteImport } from './routes/_app/dash
 import { Route as AppDevicesIndexRouteImport } from './routes/_app/devices/index'
 import { Route as AppDevicesDeviceIdRouteImport } from './routes/_app/devices/$deviceId'
 import { Route as AppDevicesDeployRouteImport } from './routes/_app/devices/deploy'
+import { Route as AppDevicesUpdatesRouteImport } from './routes/_app/devices/updates'
 import { Route as AppNetworkIndexRouteImport } from './routes/_app/network/index'
 import { Route as AppNetworkAssetsRouteImport } from './routes/_app/network/assets'
 import { Route as AppNetworkCredentialsRouteImport } from './routes/_app/network/credentials'
@@ -271,6 +272,11 @@ const AppDevicesDeviceIdRoute = AppDevicesDeviceIdRouteImport.update({
 const AppDevicesDeployRoute = AppDevicesDeployRouteImport.update({
   id: '/deploy',
   path: '/deploy',
+  getParentRoute: () => AppDevicesRouteRoute,
+} as any)
+const AppDevicesUpdatesRoute = AppDevicesUpdatesRouteImport.update({
+  id: '/updates',
+  path: '/updates',
   getParentRoute: () => AppDevicesRouteRoute,
 } as any)
 const AppNetworkIndexRoute = AppNetworkIndexRouteImport.update({
@@ -599,6 +605,7 @@ export interface FileRoutesByFullPath {
   '/dashboards/$dashboardId': typeof AppDashboardsDashboardIdRoute
   '/devices/$deviceId': typeof AppDevicesDeviceIdRoute
   '/devices/deploy': typeof AppDevicesDeployRoute
+  '/devices/updates': typeof AppDevicesUpdatesRoute
   '/network/assets': typeof AppNetworkAssetsRoute
   '/network/credentials': typeof AppNetworkCredentialsRoute
   '/network/probes': typeof AppNetworkProbesRoute
@@ -673,6 +680,7 @@ export interface FileRoutesByTo {
   '/dashboards/$dashboardId': typeof AppDashboardsDashboardIdRoute
   '/devices/$deviceId': typeof AppDevicesDeviceIdRoute
   '/devices/deploy': typeof AppDevicesDeployRoute
+  '/devices/updates': typeof AppDevicesUpdatesRoute
   '/network/assets': typeof AppNetworkAssetsRoute
   '/network/credentials': typeof AppNetworkCredentialsRoute
   '/network/probes': typeof AppNetworkProbesRoute
@@ -766,6 +774,7 @@ export interface FileRoutesById {
   '/_app/dashboards/$dashboardId': typeof AppDashboardsDashboardIdRoute
   '/_app/devices/$deviceId': typeof AppDevicesDeviceIdRoute
   '/_app/devices/deploy': typeof AppDevicesDeployRoute
+  '/_app/devices/updates': typeof AppDevicesUpdatesRoute
   '/_app/network/assets': typeof AppNetworkAssetsRoute
   '/_app/network/credentials': typeof AppNetworkCredentialsRoute
   '/_app/network/probes': typeof AppNetworkProbesRoute
@@ -859,6 +868,7 @@ export interface FileRouteTypes {
     | '/dashboards/$dashboardId'
     | '/devices/$deviceId'
     | '/devices/deploy'
+    | '/devices/updates'
     | '/network/assets'
     | '/network/credentials'
     | '/network/probes'
@@ -933,6 +943,7 @@ export interface FileRouteTypes {
     | '/dashboards/$dashboardId'
     | '/devices/$deviceId'
     | '/devices/deploy'
+    | '/devices/updates'
     | '/network/assets'
     | '/network/credentials'
     | '/network/probes'
@@ -1025,6 +1036,7 @@ export interface FileRouteTypes {
     | '/_app/dashboards/$dashboardId'
     | '/_app/devices/$deviceId'
     | '/_app/devices/deploy'
+    | '/_app/devices/updates'
     | '/_app/network/assets'
     | '/_app/network/credentials'
     | '/_app/network/probes'
@@ -1330,6 +1342,13 @@ declare module '@tanstack/react-router' {
       path: '/deploy'
       fullPath: '/devices/deploy'
       preLoaderRoute: typeof AppDevicesDeployRouteImport
+      parentRoute: typeof AppDevicesRouteRoute
+    }
+    '/_app/devices/updates': {
+      id: '/_app/devices/updates'
+      path: '/updates'
+      fullPath: '/devices/updates'
+      preLoaderRoute: typeof AppDevicesUpdatesRouteImport
       parentRoute: typeof AppDevicesRouteRoute
     }
     '/_app/network/': {
@@ -1851,12 +1870,14 @@ const AppClientsRouteRouteWithChildren = AppClientsRouteRoute._addFileChildren(
 interface AppDevicesRouteRouteChildren {
   AppDevicesDeviceIdRoute: typeof AppDevicesDeviceIdRoute
   AppDevicesDeployRoute: typeof AppDevicesDeployRoute
+  AppDevicesUpdatesRoute: typeof AppDevicesUpdatesRoute
   AppDevicesIndexRoute: typeof AppDevicesIndexRoute
 }
 
 const AppDevicesRouteRouteChildren: AppDevicesRouteRouteChildren = {
   AppDevicesDeviceIdRoute: AppDevicesDeviceIdRoute,
   AppDevicesDeployRoute: AppDevicesDeployRoute,
+  AppDevicesUpdatesRoute: AppDevicesUpdatesRoute,
   AppDevicesIndexRoute: AppDevicesIndexRoute,
 }
 

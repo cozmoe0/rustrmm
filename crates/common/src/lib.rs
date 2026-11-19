@@ -5,8 +5,12 @@ pub mod logging;
 /// Product name shown in UIs, logs and installers.
 pub const PRODUCT_NAME: &str = "RustRMM";
 
-/// Version of this build (workspace version).
-pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+/// Version of this build: the workspace version, plus `+<build id>` when the build was stamped
+/// with `RUSTRMM_BUILD_ID` (see `build.rs`).
+pub const VERSION: &str = env!("RUSTRMM_VERSION");
+
+/// The workspace version without any build stamp.
+pub const BASE_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Generates a new time-ordered identifier (UUIDv7, hyphenated lowercase).
 pub fn new_id() -> String {

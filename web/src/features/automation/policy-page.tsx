@@ -70,6 +70,8 @@ import { defaultParameterValues, toApiParameters, validateParameterValues } from
 import {
   AGENT_KEYS,
   AGENT_SETTINGS,
+  AGENT_UPDATE_DEFAULTS,
+  AGENT_UPDATE_SETTINGS,
   CONSENT_TIMEOUT_RANGE,
   DESKTOP_CONSENT_LABEL,
   DESKTOP_POLICY_DEFAULTS,
@@ -210,6 +212,55 @@ function AgentSection({
         Agent settings are pushed to every affected online device as soon as you save, and applied when offline devices
         reconnect.
       </p>
+      <AgentUpdatesCard doc={doc} onChange={onChange} readOnly={readOnly} />
+    </div>
+  )
+}
+
+/** `agent_updates.auto_update`: inherit, on or off. */
+function AgentUpdatesCard({
+  doc,
+  onChange,
+  readOnly,
+}: {
+  doc: PolicyDocument
+  onChange: (doc: PolicyDocument) => void
+  readOnly: boolean
+}) {
+  const meta = AGENT_UPDATE_SETTINGS.auto_update
+  const value = doc.agent_updates?.auto_update
+  const set = (next: boolean | undefined) => {
+    const updates = { ...doc.agent_updates }
+    if (next === undefined) delete updates.auto_update
+    else updates.auto_update = next
+    onChange({ ...doc, agent_updates: updates })
+  }
+  return (
+    <div className="mt-2 flex flex-col gap-3 rounded-xl bg-card p-4 shadow-card sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-w-0">
+        <div className="text-dense font-medium">{meta.label}</div>
+        <p className="text-micro text-muted-foreground">{meta.description}</p>
+      </div>
+      <ToggleGroup
+        value={[value === undefined ? 'inherit' : value ? 'on' : 'off']}
+        onValueChange={(next: string[]) => next[0] && set(next[0] === 'inherit' ? undefined : next[0] === 'on')}
+        variant="outline"
+        spacing={0}
+        size="sm"
+        disabled={readOnly}
+        aria-label={meta.label}
+        className="shrink-0"
+      >
+        <ToggleGroupItem value="inherit" className="px-3">
+          Inherit ({AGENT_UPDATE_DEFAULTS.auto_update ? 'on' : 'off'})
+        </ToggleGroupItem>
+        <ToggleGroupItem value="on" className="px-3">
+          On
+        </ToggleGroupItem>
+        <ToggleGroupItem value="off" className="px-3">
+          Off
+        </ToggleGroupItem>
+      </ToggleGroup>
     </div>
   )
 }

@@ -528,6 +528,7 @@ More in [docs/development.md](docs/development.md).
 | [api-monitoring.md](docs/api-monitoring.md) | Checks, alerts, notification channels, maintenance windows, remediation |
 | [api-patching.md](docs/api-patching.md) | Patch scans, approvals, rings, windows, software inventory and deployments |
 | [api-desktop.md](docs/api-desktop.md) | Remote desktop sessions, capture, input, clipboard, consent |
+| [api-agent-updates.md](docs/api-agent-updates.md) | Agent releases, build stamps, automatic updates policy, update now |
 | [api-tickets.md](docs/api-tickets.md) | Tickets, SLAs, contacts, email-to-ticket, time entries |
 | [api-escrow-network.md](docs/api-escrow-network.md) | BitLocker / LAPS escrow, discovery scans, SNMP |
 | [api-platform.md](docs/api-platform.md) | Reports, dashboards, SSO, API tokens, webhooks, branding, Noise channel, signing |

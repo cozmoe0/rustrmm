@@ -171,8 +171,9 @@ describe('effective policy display', () => {
     expect(byPath['remote_access.files']).toMatchObject({ value: 'Blocked by policy', tone: 'blocked' })
     expect(byPath['remote_access.shell']).toMatchObject({ tone: 'allowed', origin: null })
     expect(byPath['tasks.weekly']).toMatchObject({ label: 'Weekly cleanup', origin: { name: 'MSP baseline' } })
-    // 3 agent settings, 5 remote switches (incl. desktop), 4 desktop session rules, 1 task.
-    expect(rows).toHaveLength(3 + 5 + 4 + 1)
+    // 3 agent settings, 1 agent update switch, 5 remote switches (incl. desktop), 4 desktop session rules, 1 task.
+    expect(rows).toHaveLength(3 + 1 + 5 + 4 + 1)
+    expect(byPath['agent_updates.auto_update']).toMatchObject({ value: 'On', tone: 'allowed', origin: null, raw: undefined })
     expect(byPath['remote_access.desktop_view_only']).toMatchObject({ value: 'Off', origin: null })
   })
 
@@ -188,5 +189,27 @@ describe('effective policy display', () => {
     expect(taskIdFromName('Weekly temp cleanup!')).toBe('weekly-temp-cleanup')
     expect(taskIdFromName('Weekly', ['weekly', 'weekly-2'])).toBe('weekly-3')
     expect(taskIdFromName('!!!')).toBe('task')
+  })
+})
+
+describe('agent update policy', () => {
+  it('validates, merges and compacts agent_updates', () => {
+    expect(validatePolicyDocument({ agent_updates: { auto_update: false } })).toEqual([])
+    expect(validatePolicyDocument({ agent_updates: { auto_update: 'yes' } })[0]).toMatchObject({
+      path: 'agent_updates.auto_update',
+      message: 'Must be true or false',
+    })
+    expect(validatePolicyDocument({ agent_updates: { channel: 'beta' } })[0]).toMatchObject({ path: 'agent_updates.channel' })
+    const merged = mergePolicies([
+      { policyId: 'global', document: { agent_updates: { auto_update: true } } },
+      { policyId: 'client', document: { agent_updates: { auto_update: false } } },
+    ])
+    expect(merged.document.agent_updates).toEqual({ auto_update: false })
+    expect(merged.origins['agent_updates.auto_update']).toBe('client')
+    expect(compactPolicy({ agent_updates: {} })).toEqual({})
+    expect(compactPolicy({ agent_updates: { auto_update: false } })).toEqual({ agent_updates: { auto_update: false } })
+    expect(policyHighlights({ agent_updates: { auto_update: false } })).toContain('Automatic agent updates off')
+    const rows = effectiveRows({ ...merged, sources: [] })
+    expect(rows.find((row) => row.path === 'agent_updates.auto_update')).toMatchObject({ value: 'Off — update manually', tone: 'blocked' })
   })
 })

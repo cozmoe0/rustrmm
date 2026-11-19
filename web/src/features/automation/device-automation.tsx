@@ -365,7 +365,7 @@ export function DevicePolicyTab({ device }: { device: DeviceDetail }) {
   }
   const sources = sortSources(data.sources)
   const rows = effectiveRows(data)
-  const sections: PolicySection[] = ['agent', 'remote_access', 'tasks']
+  const sections: PolicySection[] = ['agent', 'agent_updates', 'remote_access', 'tasks']
   return (
     <div className="grid grid-cols-1 gap-4">
       <SectionTitle description="Policies apply in this order and later layers win: everywhere, the client, the site, groups by priority, then the device itself.">

@@ -175,6 +175,7 @@ pub async fn run(args: ServeArgs) -> Result<()> {
         Ok(None) => {}
         Err(e) => tracing::warn!(error = %format!("{e:#}"), "could not import agent release"),
     }
+    agents::releases::spawn_auto_updates(state.clone());
     // Connections from a previous run are gone.
     sqlx::query(
         "UPDATE devices SET online = 0, offline_reason = COALESCE(offline_reason, 'connection_lost') WHERE online = 1",

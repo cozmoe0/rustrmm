@@ -348,6 +348,25 @@ mod tests {
     }
 
     #[test]
+    fn build_stamps_order_builds_of_one_version() {
+        // Stamped builds (`<version>+<UTC build time>`) sort after the unstamped version, after
+        // older stamps, and before the next version.
+        assert_eq!(
+            version_cmp("0.1.0+20261118220341", "0.1.0"),
+            Ordering::Greater
+        );
+        assert_eq!(
+            version_cmp("0.1.0+20261118220341", "0.1.0+20261119080000"),
+            Ordering::Less
+        );
+        assert_eq!(
+            version_cmp("0.1.0+20261118220341", "0.1.0+20261118220341"),
+            Ordering::Equal
+        );
+        assert_eq!(version_cmp("0.1.0+20261118220341", "0.1.1"), Ordering::Less);
+    }
+
+    #[test]
     fn unknown_commands_decode_as_unsupported() {
         #[derive(Serialize)]
         struct Future {

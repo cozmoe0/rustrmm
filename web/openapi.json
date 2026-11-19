@@ -2054,6 +2054,76 @@
         ]
       }
     },
+    "/api/v1/agent-updates": {
+      "get": {
+        "operationId": "get_agent_updates",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "client_id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "site_id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "401": {
+            "description": "Sign-in required"
+          },
+          "403": {
+            "description": "Missing permission or step-up required"
+          }
+        },
+        "summary": "Agent update status",
+        "tags": [
+          "Agent releases"
+        ]
+      }
+    },
+    "/api/v1/agent-updates/update": {
+      "post": {
+        "operationId": "post_agent_updates_update",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "description": "JSON body (see the API documents in docs/)",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "401": {
+            "description": "Sign-in required"
+          },
+          "403": {
+            "description": "Missing permission or step-up required"
+          },
+          "409": {
+            "description": "No release imported"
+          }
+        },
+        "summary": "Update agents now",
+        "tags": [
+          "Agent releases"
+        ]
+      }
+    },
     "/api/v1/alert-ticket-rules": {
       "get": {
         "operationId": "get_alert_ticket_rules",
@@ -4617,6 +4687,39 @@
         "summary": "Update device",
         "tags": [
           "Devices"
+        ]
+      }
+    },
+    "/api/v1/devices/{id}/agent-update": {
+      "get": {
+        "operationId": "get_devices_id_agent_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "401": {
+            "description": "Sign-in required"
+          },
+          "403": {
+            "description": "Missing permission or step-up required"
+          },
+          "404": {
+            "description": "Not found or outside your scope"
+          }
+        },
+        "summary": "Device agent update status",
+        "tags": [
+          "Agent releases"
         ]
       }
     },

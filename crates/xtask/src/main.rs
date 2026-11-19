@@ -95,8 +95,11 @@ fn main() -> Result<()> {
                 if path.is_dir() {
                     signed += signer.sign_tree(path)?;
                     // Hashes change when files are signed: refresh the bundle manifest.
-                    if path.join("manifest.json").exists() {
-                        write_manifest(path, env!("CARGO_PKG_VERSION"))?;
+                    let manifest = path.join("manifest.json");
+                    if manifest.exists() {
+                        let version = manifest_version(&manifest)
+                            .unwrap_or_else(|| env!("CARGO_PKG_VERSION").to_string());
+                        write_manifest(path, &version)?;
                     }
                 } else if signer.sign(path)? {
                     signed += 1;
@@ -147,19 +150,27 @@ fn signer(
 }
 
 fn dist(root: &Path, no_linux: bool, no_msi: bool, signer: &sign::Signer) -> Result<()> {
+    // The MSI takes the plain workspace version; agents and the manifest carry the build stamp so
+    // every bundle is a distinct release that servers offer as an update (crates/common/build.rs).
     let version = env!("CARGO_PKG_VERSION");
+    let build_id = build_id()?;
+    let release = format!("{version}+{build_id}");
+    println!("building agent release {release}");
     let out = root.join("dist").join("agents");
     std::fs::create_dir_all(&out)?;
 
     if cfg!(windows) {
-        run(Command::new("cargo").current_dir(root).args([
-            "build",
-            "--release",
-            "-p",
-            "rustrmm-agent",
-            "--target-dir",
-            "target/rel",
-        ]))?;
+        run(Command::new("cargo")
+            .current_dir(root)
+            .env("RUSTRMM_BUILD_ID", &build_id)
+            .args([
+                "build",
+                "--release",
+                "-p",
+                "rustrmm-agent",
+                "--target-dir",
+                "target/rel",
+            ]))?;
         copy(
             &root.join("target/rel/release/rustrmm-agent.exe"),
             &out.join("windows-x86_64/rustrmm-agent.exe"),
@@ -172,16 +183,19 @@ fn dist(root: &Path, no_linux: bool, no_msi: bool, signer: &sign::Signer) -> Res
             ("x86_64-unknown-linux-musl", "linux-x86_64"),
             ("aarch64-unknown-linux-musl", "linux-aarch64"),
         ] {
-            run(Command::new("cargo").current_dir(root).args([
-                "zigbuild",
-                "--release",
-                "-p",
-                "rustrmm-agent",
-                "--target",
-                target,
-                "--target-dir",
-                "target/linux",
-            ]))?;
+            run(Command::new("cargo")
+                .current_dir(root)
+                .env("RUSTRMM_BUILD_ID", &build_id)
+                .args([
+                    "zigbuild",
+                    "--release",
+                    "-p",
+                    "rustrmm-agent",
+                    "--target",
+                    target,
+                    "--target-dir",
+                    "target/linux",
+                ]))?;
             copy(
                 &root.join(format!("target/linux/{target}/release/rustrmm-agent")),
                 &out.join(format!("{platform}/rustrmm-agent")),
@@ -209,7 +223,52 @@ fn dist(root: &Path, no_linux: bool, no_msi: bool, signer: &sign::Signer) -> Res
         // Signed last: any later msibuild edit would break the signature.
         signer.sign(&msi)?;
     }
-    write_manifest(&out, version)
+    write_manifest(&out, &release)
+}
+
+/// `RUSTRMM_BUILD_ID` when set (digits), otherwise the current UTC time as `YYYYMMDDHHMMSS`.
+fn build_id() -> Result<String> {
+    if let Ok(id) = std::env::var("RUSTRMM_BUILD_ID") {
+        let id = id.trim().to_string();
+        if id.is_empty() || id.len() > 18 || !id.chars().all(|c| c.is_ascii_digit()) {
+            bail!("RUSTRMM_BUILD_ID must be 1 to 18 digits");
+        }
+        return Ok(id);
+    }
+    let secs = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .context("system clock is before 1970")?
+        .as_secs();
+    Ok(utc_stamp(secs))
+}
+
+/// Unix seconds → `YYYYMMDDHHMMSS` (UTC), without a date library.
+fn utc_stamp(secs: u64) -> String {
+    let days = (secs / 86_400) as i64;
+    let rem = secs % 86_400;
+    // Civil-from-days (Howard Hinnant's algorithm).
+    let z = days + 719_468;
+    let era = z.div_euclid(146_097);
+    let doe = z.rem_euclid(146_097);
+    let yoe = (doe - doe / 1_460 + doe / 36_524 - doe / 146_096) / 365;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let day = doy - (153 * mp + 2) / 5 + 1;
+    let month = if mp < 10 { mp + 3 } else { mp - 9 };
+    let year = yoe + era * 400 + i64::from(month <= 2);
+    format!(
+        "{year:04}{month:02}{day:02}{:02}{:02}{:02}",
+        rem / 3_600,
+        rem % 3_600 / 60,
+        rem % 60
+    )
+}
+
+/// The `version` field of an existing bundle manifest.
+fn manifest_version(path: &Path) -> Option<String> {
+    let text = std::fs::read_to_string(path).ok()?;
+    let value: serde_json::Value = serde_json::from_str(&text).ok()?;
+    value["version"].as_str().map(str::to_string)
 }
 
 fn write_manifest(out: &Path, version: &str) -> Result<()> {
@@ -294,4 +353,14 @@ fn workspace_root() -> PathBuf {
         .nth(2)
         .map(Path::to_path_buf)
         .unwrap_or_else(|| PathBuf::from("."))
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn utc_stamps() {
+        assert_eq!(super::utc_stamp(0), "19700101000000");
+        assert_eq!(super::utc_stamp(951_782_400), "20000229000000");
+        assert_eq!(super::utc_stamp(1_795_039_421), "20261118220341");
+    }
 }

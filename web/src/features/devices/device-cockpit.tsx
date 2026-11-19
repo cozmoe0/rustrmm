@@ -68,6 +68,7 @@ import { usePowerAction } from './use-power-action'
 import { DesktopPanel, RemoteNav, RemoteToolPanel, TerminalPanel } from './cockpit-remote'
 import { COCKPIT_TAB_LABEL, DEVICE_TABS, isRemoteTab, remoteTabsFor, type CockpitTab } from './cockpit-tabs'
 import { TimelineTab } from './cockpit-timeline'
+import { AgentVersionStat } from './agent-version-stat'
 import { EditDeviceDialog } from './device-dialogs'
 import { ConnectionPill, OsTile } from './device-ui'
 import { DevicesContextPanel } from './devices-context'
@@ -482,7 +483,7 @@ export function DeviceCockpit({ deviceId, tab }: { deviceId: string; tab: Cockpi
                     <span className="block max-w-44 truncate text-[13px]">{device.last_user ?? '—'}</span>
                   </HeaderStat>
                   <HeaderStat label="Agent">
-                    <span className="font-mono text-[13px]">{device.agent_version}</span>
+                    <AgentVersionStat deviceId={device.id} version={device.agent_version} />
                   </HeaderStat>
                   <HeaderStat label="Last seen">
                     {device.online ? <span className="text-[13px] text-live">Connected</span> : <RelativeTime value={device.last_seen_at} className="text-[13px]" />}

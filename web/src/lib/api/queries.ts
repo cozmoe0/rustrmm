@@ -1,6 +1,7 @@
 import { queryOptions } from '@tanstack/react-query'
 import { setCsrfToken } from './client'
 import {
+  agentUpdatesApi,
   alertsApi,
   maintenanceApi,
   monitoringApi,
@@ -97,6 +98,11 @@ export const keys = {
   metrics: (id: string, range: MetricsRange) => ['devices', 'metrics', id, range] as const,
   timeline: (id: string) => ['devices', 'timeline', id] as const,
   enrollment: ['enrollment'] as const,
+  agentUpdates: ['agent-updates'] as const,
+  agentUpdateList: (filters: { client_id?: string; site_id?: string }) => ['agent-updates', 'list', filters] as const,
+  deviceAgentUpdate: (id: string) => ['agent-updates', 'device', id] as const,
+  rollouts: ['agent-updates', 'rollouts'] as const,
+  agentReleases: ['agent-updates', 'releases'] as const,
   enrollmentList: (filters: { site_id?: string; client_id?: string }) => ['enrollment', 'list', filters] as const,
   remote: (id: string) => ['remote', id] as const,
   processes: (id: string) => ['remote', id, 'processes'] as const,
@@ -298,6 +304,28 @@ export const enrollmentQuery = (filters: { site_id?: string; client_id?: string 
     queryFn: () => enrollmentApi.list(filters),
     staleTime: 15_000,
   })
+
+// ---------------------------------------------------------------- agent updates
+
+export const agentUpdatesQuery = (filters: { client_id?: string; site_id?: string } = {}) =>
+  queryOptions({
+    queryKey: keys.agentUpdateList(filters),
+    queryFn: () => agentUpdatesApi.list(filters),
+    staleTime: 10_000,
+  })
+
+export const deviceAgentUpdateQuery = (deviceId: string) =>
+  queryOptions({
+    queryKey: keys.deviceAgentUpdate(deviceId),
+    queryFn: () => agentUpdatesApi.device(deviceId),
+    staleTime: 15_000,
+  })
+
+export const rolloutsQuery = () =>
+  queryOptions({ queryKey: keys.rollouts, queryFn: () => agentUpdatesApi.rollouts(), staleTime: 10_000 })
+
+export const agentReleasesQuery = () =>
+  queryOptions({ queryKey: keys.agentReleases, queryFn: () => agentUpdatesApi.releases(), staleTime: 30_000 })
 
 // ---------------------------------------------------------------- automation (Phase 5)
 

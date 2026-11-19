@@ -21,6 +21,7 @@ export const PERMISSIONS = {
   devicesDelete: 'devices.delete',
   agentsDeploy: 'agents.deploy',
   agentsApprove: 'agents.approve',
+  agentsUpdate: 'agents.update',
   remoteSystem: 'remote.system',
   remoteFiles: 'remote.files',
   remotePower: 'remote.power',

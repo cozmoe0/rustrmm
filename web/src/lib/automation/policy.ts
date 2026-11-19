@@ -8,6 +8,7 @@ import type {
   EffectivePolicy,
   EffectivePolicySource,
   PolicyAgentSection,
+  PolicyAgentUpdatesSection,
   PolicyDocument,
   PolicyRemoteAccessSection,
   PolicyTargetType,
@@ -23,11 +24,12 @@ import {
 import { compactPatching, mergePatchingLayers, patchingHighlights, validatePatching } from '@/lib/patching/policy'
 import { compactEscrow, escrowHighlights, mergeEscrowLayers, validateEscrow } from '@/lib/escrow/policy'
 
-export const POLICY_SECTIONS = ['agent', 'remote_access', 'tasks', 'monitoring', 'patching', 'escrow'] as const
+export const POLICY_SECTIONS = ['agent', 'agent_updates', 'remote_access', 'tasks', 'monitoring', 'patching', 'escrow'] as const
 export type PolicySection = (typeof POLICY_SECTIONS)[number]
 
 export const SECTION_LABEL: Record<PolicySection, string> = {
   agent: 'Agent intervals',
+  agent_updates: 'Agent updates',
   remote_access: 'Remote access',
   tasks: 'Scheduled tasks',
   monitoring: 'Monitoring',
@@ -72,6 +74,21 @@ export const AGENT_SETTINGS: Record<
 }
 
 export const AGENT_KEYS = Object.keys(AGENT_SETTINGS) as AgentKey[]
+
+export type AgentUpdateKey = keyof PolicyAgentUpdatesSection
+
+export const AGENT_UPDATE_SETTINGS: Record<AgentUpdateKey, { label: string; description: string }> = {
+  auto_update: {
+    label: 'Automatic agent updates',
+    description:
+      'Install each new agent release automatically once the server is upgraded, a few devices at a time. When off, devices wait for “Update now”.',
+  },
+}
+
+export const AGENT_UPDATE_KEYS = Object.keys(AGENT_UPDATE_SETTINGS) as AgentUpdateKey[]
+
+/** Values that apply when no policy sets a key (docs/api-agent-updates.md). */
+export const AGENT_UPDATE_DEFAULTS: Required<PolicyAgentUpdatesSection> = { auto_update: true }
 
 export const REMOTE_SETTINGS: Record<RemoteKey, { label: string; description: string }> = {
   shell: { label: 'Remote shell', description: 'Interactive, recorded terminals on the device.' },
@@ -196,6 +213,17 @@ export function validatePolicyDocument(value: unknown, options: PolicyValidation
     }
   }
 
+  if (value.agent_updates !== undefined) {
+    if (!isObject(value.agent_updates)) issues.push({ path: 'agent_updates', message: 'Must be an object' })
+    else {
+      for (const [key, raw] of Object.entries(value.agent_updates)) {
+        const path = `agent_updates.${key}`
+        if (!(AGENT_UPDATE_KEYS as string[]).includes(key)) issues.push({ path, message: `Unknown setting “${key}”` })
+        else if (typeof raw !== 'boolean') issues.push({ path, message: 'Must be true or false' })
+      }
+    }
+  }
+
   if (value.remote_access !== undefined) {
     if (!isObject(value.remote_access)) issues.push({ path: 'remote_access', message: 'Must be an object' })
     else {
@@ -290,6 +318,10 @@ export function compactPolicy(doc: PolicyDocument, checkTypes?: readonly CheckTy
     Object.entries(doc.agent ?? {}).filter(([, value]) => value !== undefined && value !== null),
   )
   if (Object.keys(agent).length) out.agent = agent as PolicyAgentSection
+  const updates = Object.fromEntries(
+    Object.entries(doc.agent_updates ?? {}).filter(([, value]) => typeof value === 'boolean'),
+  )
+  if (Object.keys(updates).length) out.agent_updates = updates as PolicyAgentUpdatesSection
   const remote = Object.fromEntries(
     Object.entries(doc.remote_access ?? {}).filter(([key, value]) =>
       isRemoteKey(key) ? typeof value === 'boolean' : isDesktopPolicyKey(key) && validateDesktopPolicyValue(key, value) === null,
@@ -328,6 +360,14 @@ export function mergePolicies(layers: PolicyLayer[]): Pick<EffectivePolicy, 'doc
         if (value === undefined) continue
         document.agent = { ...document.agent, [key]: value }
         origins[`agent.${key}`] = policyId
+      }
+    }
+    if (layer.agent_updates) {
+      for (const key of AGENT_UPDATE_KEYS) {
+        const value = layer.agent_updates[key]
+        if (value === undefined) continue
+        document.agent_updates = { ...document.agent_updates, [key]: value }
+        origins[`agent_updates.${key}`] = policyId
       }
     }
     if (layer.remote_access) {
@@ -410,6 +450,20 @@ export function effectiveRows(effective: Pick<EffectivePolicy, 'document' | 'ori
       origin: origin(`agent.${key}`),
     })
   }
+  for (const key of AGENT_UPDATE_KEYS) {
+    const raw = effective.document.agent_updates?.[key]
+    const on = raw ?? AGENT_UPDATE_DEFAULTS[key]
+    rows.push({
+      section: 'agent_updates',
+      path: `agent_updates.${key}`,
+      label: AGENT_UPDATE_SETTINGS[key].label,
+      description: AGENT_UPDATE_SETTINGS[key].description,
+      value: on ? 'On' : 'Off — update manually',
+      raw,
+      origin: origin(`agent_updates.${key}`),
+      tone: on ? 'allowed' : 'blocked',
+    })
+  }
   for (const key of REMOTE_KEYS) {
     const raw = effective.document.remote_access?.[key]
     const allowed = raw !== false
@@ -457,6 +511,8 @@ export function policyHighlights(doc: PolicyDocument): string[] {
     const value = doc.agent?.[key]
     if (value !== undefined) out.push(`${AGENT_SETTINGS[key].label} ${formatAgentValue(key, value)}`)
   }
+  if (doc.agent_updates?.auto_update !== undefined)
+    out.push(`Automatic agent updates ${doc.agent_updates.auto_update ? 'on' : 'off'}`)
   for (const key of REMOTE_KEYS) {
     const value = doc.remote_access?.[key]
     if (value !== undefined) out.push(`${REMOTE_SETTINGS[key].label} ${value ? 'allowed' : 'blocked'}`)

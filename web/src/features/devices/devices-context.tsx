@@ -4,6 +4,7 @@ import { useLocation, useNavigate, useSearch } from '@tanstack/react-router'
 import {
   Bookmark,
   CircleDashed,
+  CircleFadingArrowUp,
   Inbox,
   Layers,
   Rocket,
@@ -15,7 +16,7 @@ import {
 } from 'lucide-react'
 import { ContextGroup, ContextLink, ContextPanel } from '@/components/shell/context-panel'
 import { StatusDot } from '@/components/common/status-dot'
-import { devicesQuery, fleetQuery } from '@/lib/api/queries'
+import { agentUpdatesQuery, devicesQuery, fleetQuery } from '@/lib/api/queries'
 import type { DeviceType, OsFamily } from '@/lib/api/types'
 import {
   DEVICE_TYPE_LABEL,
@@ -244,6 +245,9 @@ export function DevicesContextPanel() {
   const deploySearch = useSearch({ strict: false }) as { section?: string }
   // Which deployment entry is current: null when another page is showing.
   const deploySection = pathname === '/devices/deploy' ? (deploySearch.section ?? 'keys') : null
+  const onUpdates = pathname === '/devices/updates'
+  const updates = useQuery({ ...agentUpdatesQuery({ client_id: clientId, site_id: siteId }), staleTime: 60_000 })
+  const needUpdate = updates.data ? updates.data.summary.outdated + updates.data.summary.failed : 0
   const online = counts.state.online
   const total = devices.length
 
@@ -288,6 +292,23 @@ export function DevicesContextPanel() {
             {view.label}
           </ViewLink>
         ))}
+      </ContextGroup>
+
+      <ContextGroup label="Agents">
+        <ViewLink
+          active={onUpdates}
+          onClick={() => void navigate({ to: '/devices/updates', search: (prev) => ({ client: prev.client, site: prev.site }) })}
+          icon={<CircleFadingArrowUp />}
+          count={
+            needUpdate > 0 ? (
+              <span className="tabular rounded-full bg-warning/15 px-1.5 text-micro font-semibold text-warning">{formatNumber(needUpdate)}</span>
+            ) : (
+              '0'
+            )
+          }
+        >
+          Agent updates
+        </ViewLink>
       </ContextGroup>
 
       {canDeploy && (

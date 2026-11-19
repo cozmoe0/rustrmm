@@ -148,6 +148,10 @@ pub fn router() -> Router<AppState> {
         .route("/devices/{id}/ping", post(releases::ping))
         .route("/devices/{id}/commands", get(releases::device_commands))
         .route("/devices/{id}/update", post(releases::update_device))
+        .route(
+            "/devices/{id}/agent-update",
+            get(releases::device_agent_update),
+        )
         // remote tools
         .route("/devices/{id}/processes", get(remote::processes))
         .route(
@@ -183,6 +187,8 @@ pub fn router() -> Router<AppState> {
             post(releases::create_rollout),
         )
         .route("/rollouts", get(releases::list_rollouts))
+        .route("/agent-updates", get(releases::agent_updates))
+        .route("/agent-updates/update", post(releases::update_agents))
         .route("/rollouts/{id}/{action}", post(releases::rollout_action))
         // automation: scripts and variables
         .route("/scripts", get(scripts::list).post(scripts::create))

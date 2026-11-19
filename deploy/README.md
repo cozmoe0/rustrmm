@@ -87,8 +87,25 @@ master key from the recovery kit first.
 ## Upgrading
 
 ```bash
-docker compose pull   # or: git pull && docker compose build
-docker compose up -d
+git pull
+docker compose up -d --build   # or, for a published image: docker compose pull && docker compose up -d
 ```
 
 The server takes an automatic backup before applying any database migration.
+
+### Agents follow the server
+
+Each image build stamps the agents with the UTC build time (`0.1.0+20261118220341`), so every
+rebuild from changed sources is a new agent release. On start-up the server imports and signs it,
+and **Devices → Agent updates** lists which devices still run an older agent.
+
+- Devices update **automatically** within a few minutes, 25 at a time, unless a policy turns it off
+  (**Automation → Policies → Agent → Automatic agent updates**, per client, site, group or device).
+- **Update now** (per device, for a selection, or **Update all outdated**) installs the new
+  agent at once, whatever the policy says. Offline devices update when they reconnect.
+- A new agent that does not reconnect within 3 minutes is rolled back on the device by itself and
+  shows as *Update failed*.
+- Old release files are pruned after three newer builds.
+
+To pin the stamp (for example to the CI build number), pass `--build-arg RUSTRMM_BUILD_ID=<digits>`
+to the build. Details are in `docs/api-agent-updates.md`.

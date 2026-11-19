@@ -133,6 +133,7 @@ export const PERMISSION_CATALOG: Permission[] = [
   { key: 'devices.delete', group: 'Devices', label: 'Delete devices', description: 'Permanently remove revoked devices and their history.', risk: 'high' },
   { key: 'agents.deploy', group: 'Deployment', label: 'Deploy agents', description: 'Create deploy keys and download installers.', risk: 'high' },
   { key: 'agents.approve', group: 'Deployment', label: 'Approve enrollments', description: 'Approve or reject devices waiting to join.', risk: 'medium' },
+  { key: 'agents.update', group: 'Deployment', label: 'Manage agent updates', description: 'Update agents to the latest release and control rollouts.', risk: 'high' },
   { key: 'audit.view', group: 'Audit', label: 'View audit log', description: 'Read the tamper-evident audit trail.', risk: 'low' },
   { key: 'audit.export', group: 'Audit', label: 'Export audit log', description: 'Download the audit trail as CSV or JSON.', risk: 'medium' },
   { key: 'backups.view', group: 'Backups', label: 'View backups', description: 'See backup history and settings.', risk: 'low' },

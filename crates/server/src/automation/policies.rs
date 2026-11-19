@@ -21,12 +21,15 @@ use crate::state::AppState;
 
 pub const SECTIONS: &[&str] = &[
     "agent",
+    "agent_updates",
     "remote_access",
     "tasks",
     "monitoring",
     "patching",
     "escrow",
 ];
+/// Boolean `agent_updates` switches.
+const AGENT_UPDATE_KEYS: &[&str] = &["auto_update"];
 const AGENT_KEYS: &[(&str, i64, i64)] = &[
     ("heartbeat_secs", 10, 300),
     ("metrics_secs", 10, 600),
@@ -239,6 +242,20 @@ pub fn validate_structure(doc: &Value) -> Result<Vec<PolicyTask>, DocError> {
             "monitoring" => crate::monitoring::policy::validate_section(value)?,
             "patching" => crate::patching::policy::validate_section(value)?,
             "escrow" => crate::escrow::policy::validate_section(value)?,
+            "agent_updates" => {
+                let updates = value
+                    .as_object()
+                    .ok_or_else(|| err("agent_updates", "must be an object"))?;
+                for (key, v) in updates {
+                    let path = format!("agent_updates.{key}");
+                    if !AGENT_UPDATE_KEYS.contains(&key.as_str()) {
+                        return Err(err(path, "unknown setting"));
+                    }
+                    if !v.is_boolean() {
+                        return Err(err(path, "must be true or false"));
+                    }
+                }
+            }
             other => {
                 return Err(err(
                     other,
@@ -760,6 +777,18 @@ pub fn desktop_policy(document: &Value, origins: &BTreeMap<String, String>) -> D
         policy.view_only = view_only;
     }
     policy
+}
+
+/// Whether new agent releases install automatically (`agent_updates.auto_update`, default on),
+/// and the policy that decided it (`None` when the default applies).
+pub fn auto_update(document: &Value, origins: &BTreeMap<String, String>) -> (bool, Option<String>) {
+    match document
+        .pointer("/agent_updates/auto_update")
+        .and_then(Value::as_bool)
+    {
+        Some(on) => (on, origins.get("agent_updates.auto_update").cloned()),
+        None => (true, None),
+    }
 }
 
 /// The device's effective desktop settings (defaults when the device has no policy).
@@ -1465,6 +1494,32 @@ mod tests {
         assert_eq!(policy.consent_timeout_secs, 45);
         assert!(!policy.banner);
         assert!(policy.view_only);
+
+        // Agent updates: on by default; a policy can switch them off; only booleans are valid.
+        assert_eq!(auto_update(&json!({}), &BTreeMap::new()), (true, None));
+        let origins = BTreeMap::from([("agent_updates.auto_update".to_string(), "p1".to_string())]);
+        assert_eq!(
+            auto_update(
+                &json!({ "agent_updates": { "auto_update": false } }),
+                &origins
+            ),
+            (false, Some("p1".to_string()))
+        );
+        assert!(validate_structure(&json!({ "agent_updates": { "auto_update": false } })).is_ok());
+        for (doc, path) in [
+            (
+                json!({ "agent_updates": { "auto_update": "yes" } }),
+                "agent_updates.auto_update",
+            ),
+            (
+                json!({ "agent_updates": { "channel": "beta" } }),
+                "agent_updates.channel",
+            ),
+            (json!({ "agent_updates": true }), "agent_updates"),
+        ] {
+            let error = validate_structure(&doc).expect_err("invalid");
+            assert_eq!(error.path, path);
+        }
 
         // Defaults when nothing is set.
         assert_eq!(

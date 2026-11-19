@@ -42,10 +42,11 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use tokio_util::sync::CancellationToken;
 
-pub const AGENT_VERSION: &str = env!("CARGO_PKG_VERSION");
+/// The agent's version, including the build stamp (`0.1.0+20261118220341`) of stamped builds.
+pub const AGENT_VERSION: &str = rustrmm_common::VERSION;
 
 #[derive(Parser)]
-#[command(name = "rustrmm-agent", version, about = "RustRMM endpoint agent")]
+#[command(name = "rustrmm-agent", version = AGENT_VERSION, about = "RustRMM endpoint agent")]
 struct Cli {
     /// Override the data directory (development: run without installing).
     #[arg(long, global = true, env = "RUSTRMM_AGENT_DATA_DIR")]

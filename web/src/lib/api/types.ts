@@ -779,6 +779,115 @@ export interface EnrollmentTokenList {
   artifacts: AgentArtifact[]
 }
 
+// ---------------------------------------------------------------- agent updates
+
+/** Where a device stands against the latest agent release. */
+export type AgentUpdateState = 'current' | 'outdated' | 'queued' | 'updating' | 'failed' | 'unsupported' | 'unknown'
+
+/** `GET /devices/{id}/agent-update` (also the status part of each overview row). */
+export interface DeviceAgentUpdate {
+  state: AgentUpdateState
+  latest_version: string | null
+  /** The release of the open or last attempt. */
+  target_version: string | null
+  last_error: string | null
+  attempt_at: Timestamp | null
+  attempt_kind: 'manual' | 'auto' | null
+  auto_update: boolean
+  /** Policy that set `agent_updates.auto_update`; null when the default (on) applies. */
+  auto_update_policy: string | null
+}
+
+export interface AgentUpdateDevice extends DeviceAgentUpdate {
+  id: Uuid
+  hostname: string
+  display_name: string | null
+  os_family: OsFamily
+  os_name: string
+  arch: string
+  agent_version: string
+  online: boolean
+  last_seen_at: Timestamp | null
+  site_id: Uuid
+  site_name: string
+  client_id: Uuid
+  client_name: string
+}
+
+export interface AgentUpdatesSummary {
+  total: number
+  current: number
+  outdated: number
+  queued: number
+  updating: number
+  failed: number
+  unsupported: number
+  /** Devices whose policy allows automatic updates. */
+  auto_update: number
+}
+
+export interface AgentLatestRelease {
+  id: Uuid
+  version: string
+  imported_at: Timestamp
+  platforms: string[]
+}
+
+/** `GET /agent-updates` */
+export interface AgentUpdatesResponse {
+  server_version: string
+  latest: AgentLatestRelease | null
+  summary: AgentUpdatesSummary
+  items: AgentUpdateDevice[]
+}
+
+/** `POST /agent-updates/update` */
+export interface AgentUpdateRequest {
+  device_ids?: Uuid[]
+  all_outdated?: boolean
+  client_id?: Uuid
+  site_id?: Uuid
+}
+
+export interface AgentUpdateResult {
+  rollout_id: Uuid | null
+  version: string
+  targeted: number
+}
+
+export type RolloutStatus = 'active' | 'paused' | 'completed' | 'cancelled'
+export type RolloutTargetStatus = 'pending' | 'sent' | 'succeeded' | 'failed' | 'skipped'
+
+/** `GET /rollouts` */
+export interface AgentRollout {
+  id: Uuid
+  version: string
+  kind: 'manual' | 'auto'
+  scope: { type: 'all' | 'client' | 'site' | 'devices'; id?: string; ids?: string[] } | null
+  percent: number
+  status: RolloutStatus
+  created_by: string | null
+  created_at: Timestamp
+  updated_at: Timestamp
+  counts: Partial<Record<RolloutTargetStatus, number>>
+}
+
+/** `GET /agent-releases` */
+export interface AgentRelease {
+  id: Uuid
+  version: string
+  imported_at: Timestamp
+  /** Set when the release's files were removed to save space. */
+  pruned_at: Timestamp | null
+  files: { platform: string; file: string; size_bytes: number; sha256: string }[]
+  devices: number
+}
+
+export interface AgentReleaseList {
+  items: AgentRelease[]
+  versions: { version: string; devices: number }[]
+}
+
 export interface EnrollmentTokenCreate {
   name: string
   expires_in_days?: number
@@ -1477,6 +1586,12 @@ export interface PolicyAgentSection {
   inventory_minutes?: number
 }
 
+/** How new agent releases reach devices (`agent_updates`). */
+export interface PolicyAgentUpdatesSection {
+  /** Install new releases automatically (default true). */
+  auto_update?: boolean
+}
+
 export type DesktopConsentMode = 'never' | 'always' | 'when_user_present'
 
 export interface PolicyRemoteAccessSection {
@@ -1508,6 +1623,7 @@ export interface PolicyTask {
 
 export interface PolicyDocument {
   agent?: PolicyAgentSection
+  agent_updates?: PolicyAgentUpdatesSection
   remote_access?: PolicyRemoteAccessSection
   tasks?: PolicyTask[]
   /** Phase 6: agent checks and server-side checks. */

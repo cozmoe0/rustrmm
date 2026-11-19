@@ -373,8 +373,16 @@ async fn run_device(
                         t if t == InventoryAck::TYPE => {}
                         t if t == rustrmm_proto::commands::SignedCommand::TYPE => {
                             let signed: rustrmm_proto::commands::SignedCommand = frame.body()?;
-                            let cmd_id = rmp_serde::from_slice::<rustrmm_proto::commands::CommandPayload>(&signed.payload).map(|p| p.cmd_id).unwrap_or_default();
-                            let result = rustrmm_proto::commands::CommandResult { cmd_id, status: "rejected".into(), message: "simulated device".into(), data: serde_json::Value::Null };
+                            let payload = rmp_serde::from_slice::<rustrmm_proto::commands::CommandPayload>(&signed.payload).ok();
+                            let is_update = matches!(payload.as_ref().map(|p| &p.command), Some(rustrmm_proto::commands::Command::UpdateAgent(_)));
+                            let cmd_id = payload.map(|p| p.cmd_id).unwrap_or_default();
+                            // Agent updates are answered like a development agent (verified, not installed) so a
+                            // simulated fleet never fails, and so never auto-pauses, a real rollout.
+                            let result = if is_update {
+                                rustrmm_proto::commands::CommandResult { cmd_id, status: "succeeded".into(), message: "simulated device: verified and staged (development mode: not installed)".into(), data: serde_json::Value::Null }
+                            } else {
+                                rustrmm_proto::commands::CommandResult { cmd_id, status: "rejected".into(), message: "simulated device".into(), data: serde_json::Value::Null }
+                            };
                             sink.send(WsMessage::Binary(rustrmm_proto::encode(&result)?.into())).await?;
                         }
                         _ => {}

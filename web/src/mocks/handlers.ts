@@ -24,6 +24,7 @@ import {
   uuid,
   type MockUser,
 } from './db'
+import { agentUpdateHandlers } from './agent-update-handlers'
 import { automationHandlers } from './automation-handlers'
 import { deviceHandlers } from './device-handlers'
 import { monitoringHandlers } from './monitoring-handlers'
@@ -915,6 +916,7 @@ export const handlers = [
     await latency()
     return guard(request) ?? HttpResponse.json({ ticket: `mock-${randomHex(16)}`, expires_at: new Date(Date.now() + 30_000).toISOString() })
   }),
+  ...agentUpdateHandlers,
   ...automationHandlers,
   ...monitoringHandlers,
   ...patchingHandlers,

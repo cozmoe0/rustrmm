@@ -44,12 +44,22 @@ RUN rustup toolchain install \
 COPY Cargo.toml Cargo.lock ./
 COPY .cargo .cargo
 COPY crates crates
+# Build stamp: the agents and the server report "<version>+<stamp>", so every image built from
+# changed sources is a new agent release that the console offers to devices (auto-update policy or
+# "Update now"). The default stamp is the UTC build time; pin it with --build-arg RUSTRMM_BUILD_ID=….
+# This layer is cached until the sources above change, so rebuilding unchanged sources keeps it.
+ARG RUSTRMM_BUILD_ID
+RUN id="${RUSTRMM_BUILD_ID:-$(date -u +%Y%m%d%H%M%S)}" \
+ && case "$id" in ''|*[!0-9]*) echo "RUSTRMM_BUILD_ID must be digits, got '$id'" >&2; exit 1 ;; esac \
+ && echo "$id" > /src/.build-id \
+ && echo "build stamp: $id"
 
 # ---------------------------------------------------------------- agents (built once)
 FROM rust-base AS agents
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/src/target,sharing=locked \
     set -e; \
+    export RUSTRMM_BUILD_ID="$(cat /src/.build-id)"; \
     for t in x86_64-unknown-linux-musl:linux-x86_64 aarch64-unknown-linux-musl:linux-aarch64; do \
       target="${t%%:*}"; platform="${t##*:}"; \
       cargo zigbuild --release --locked -p rustrmm-agent --target "$target"; \
@@ -66,13 +76,16 @@ FROM --platform=$BUILDPLATFORM debian:trixie-slim AS bundle
 RUN apt-get update && apt-get install -y --no-install-recommends msitools wixl osslsigncode ca-certificates && rm -rf /var/lib/apt/lists/*
 COPY packaging /packaging
 COPY Cargo.toml /src/Cargo.toml
+COPY --from=agents /src/.build-id /src/.build-id
 COPY --from=agents /dist /dist
+# The MSI takes the plain version (MSI versions are numeric); the manifest the server imports as
+# an agent release carries the build stamp the agents report.
 RUN --mount=type=secret,id=signing_pfx_b64 --mount=type=secret,id=signing_pfx_password \
     version="$(tr -d '\r' < /src/Cargo.toml | sed -n 's/^version = "\(.*\)"/\1/p' | head -1)" \
  && sh /packaging/windows/sign.sh /dist/windows-x86_64/rustrmm-agent.exe \
  && bash /packaging/windows/build-msi.sh /dist/windows-x86_64/rustrmm-agent.exe "$version" /dist/windows-x86_64/RustRMMAgent-x64.msi \
  && sh /packaging/windows/sign.sh /dist/windows-x86_64/RustRMMAgent-x64.msi \
- && sh /packaging/make-manifest.sh /dist "$version"
+ && sh /packaging/make-manifest.sh /dist "$version+$(cat /src/.build-id)"
 
 # The bundle alone (release workflow: --target bundle-export --output type=local,dest=…).
 FROM scratch AS bundle-export
@@ -89,7 +102,7 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
       linux/arm64) target=aarch64-unknown-linux-musl ;; \
       *) echo "unsupported platform ${TARGETPLATFORM}" >&2; exit 1 ;; \
     esac \
- && cargo zigbuild --release --locked -p rustrmm-server --target "$target" \
+ && RUSTRMM_BUILD_ID="$(cat /src/.build-id)" cargo zigbuild --release --locked -p rustrmm-server --target "$target" \
  && mkdir -p /out/data /out/backups \
  && cp "target/$target/release/rustrmm-server" /out/rustrmm-server
 

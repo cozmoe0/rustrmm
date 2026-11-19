@@ -13,6 +13,12 @@ import {
   type UploadOptions,
 } from './client'
 import type {
+  AgentReleaseList,
+  AgentRollout,
+  AgentUpdateRequest,
+  AgentUpdateResult,
+  AgentUpdatesResponse,
+  DeviceAgentUpdate,
   AlertActionResponse,
   AlertBulkRequest,
   AlertBulkResponse,
@@ -389,6 +395,18 @@ export const devicesApi = {
   remove: (id: string) => api.del(`/devices/${id}`),
   live: (id: string) => api.post<{ ok: boolean }>(`/devices/${id}/live`),
   refreshInventory: (id: string) => api.post<{ ok: boolean }>(`/devices/${id}/inventory/refresh`),
+}
+
+export const agentUpdatesApi = {
+  list: (filters: { client_id?: string; site_id?: string } = {}) =>
+    api.get<AgentUpdatesResponse>('/agent-updates', { query: { ...filters } }),
+  device: (id: string) => api.get<DeviceAgentUpdate>(`/devices/${id}/agent-update`),
+  update: (body: AgentUpdateRequest) => api.post<AgentUpdateResult>('/agent-updates/update', body),
+  updateDevice: (id: string) => api.post<AgentUpdateResult>(`/devices/${id}/update`),
+  rollouts: () => api.get<ListResponse<AgentRollout>>('/rollouts'),
+  rolloutAction: (id: string, action: 'pause' | 'resume' | 'cancel') => api.post<void>(`/rollouts/${id}/${action}`),
+  releases: () => api.get<AgentReleaseList>('/agent-releases'),
+  importRelease: () => api.post<{ imported: string | null }>('/agent-releases/import'),
 }
 
 export const enrollmentApi = {
