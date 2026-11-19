@@ -13,7 +13,7 @@ use url::Url;
 #[derive(Debug, Parser)]
 #[command(
     name = "rustrmm-server",
-    version,
+    version = rustrmm_common::VERSION,
     about = "RustRMM server: web console, REST API and agent gateway"
 )]
 pub struct Cli {
