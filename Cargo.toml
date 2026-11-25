@@ -83,9 +83,9 @@ sqlx = { version = "0.9", default-features = false, features = ["runtime-tokio",
 rust-embed = { version = "8", features = ["mime-guess"] }
 mime_guess = "2"
 sha1 = "0.11"
-qrcode = { version = "0.14", default-features = false, features = ["svg"] }
+qrcode = { version = "0.15", default-features = false, features = ["svg"] }
 webauthn-rs = { version = "0.6", features = ["danger-allow-state-serialisation"] }
-croner = "4"
+croner = "5"
 chrono-tz = { version = "0.10.4", default-features = false, features = ["std"] }
 regex = { version = "1.13.1", default-features = false, features = ["std", "perf", "unicode"] }
 zstd = "0.14"
